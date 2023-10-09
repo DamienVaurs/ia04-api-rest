@@ -41,6 +41,7 @@ func (rsa *RestServerAgent) Start() {
 	mux := http.NewServeMux()
 	mux.HandleFunc(endpoints.Results, rsa.doCalcResult)
 	mux.HandleFunc(endpoints.Vote, rsa.doVote)
+	mux.HandleFunc(endpoints.NewBallot, rsa.doCreateNewBallot)
 
 	// création du serveur http
 	s := &http.Server{
