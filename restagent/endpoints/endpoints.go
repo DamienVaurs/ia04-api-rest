@@ -1,4 +1,4 @@
 package endpoints
 
 const Vote = "/vote"
-const Results = "/results"
+const Results = "/result"
