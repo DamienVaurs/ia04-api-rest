@@ -10,7 +10,7 @@ import (
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/endpoints"
 )
 
-// Fonction qui réalise l'appel à l'API REST pour obtenir le résultat du vote :
+// Fonctions qui réalisent l'appel à l'API REST pour obtenir le résultat du vote :
 // http://localhost:8080/result
 
 func (rca *RestClientAgent) treatResponseResults(r *http.Response) (resp restagent.ResponseResult, err error) {

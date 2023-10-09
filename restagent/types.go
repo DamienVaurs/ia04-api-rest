@@ -11,11 +11,21 @@ type Response struct {
 }
 
 // Types utilisés pour la requête /new_ballot
+type Ballot struct {
+	BallotId string               `json:"ballot-id"` //Champ rajouté, pas dans sujet
+	Rule     string               `json:"rule"`
+	Deadline string               `json:"deadline"`
+	VoterIds []string             `json:"voter-ids"`
+	Alts     int                  `json:"#alts"`
+	TieBreak []comsoc.Alternative `json:"tie-break"`
+}
 type RequestNewBallot struct {
-	Rule     string   `json:"rule"`
-	Deadline string   `json:"deadline"`
-	VoterIds []string `json:"voter-ids"`
-	Alts     int      `json:"#alts"`
+	BallotId string               `json:"ballot-id"` //Champ rajouté, pas dans sujet
+	Rule     string               `json:"rule"`
+	Deadline string               `json:"deadline"`
+	VoterIds []string             `json:"voter-ids"`
+	Alts     int                  `json:"#alts"`
+	TieBreak []comsoc.Alternative `json:"tie-break"`
 }
 
 type ResponseNewBallot struct {
