@@ -49,32 +49,65 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// calcule de la réponse
-
-	scf, err2 := comsoc.MajoritySCF(rsa.ballotsMap[req.BallotId])
-	if err2 != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := "Error while processing result (SCF)"
-		w.Write([]byte(msg))
-		return
-	}
-	if len(scf) < 1 {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := "Error : SCF ends with tie. No winner"
-		w.Write([]byte(msg))
-		return
-	}
+	// calcule de la réponse en fonction de Ballot.Rule
 	resp := restagent.ResponseResult{}
-	if len(scf) == 1 {
+	if rsa.ballotsList[req.BallotId].Rule == "approval" {
+		//Vérifie que le ballot a bien un seuil
+		//TODO : appliquer le threshold pour ApprovalSCF
+		scf, err := comsoc.ApprovalSCF(rsa.ballotsMap[req.BallotId], []int{1})
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+			w.Write([]byte(msg))
+			return
+		}
 		resp.Winner = scf[0]
+		w.WriteHeader(http.StatusOK)
+		serial, err := json.Marshal(resp)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : can't serialize response for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+			w.Write([]byte(msg))
+			return
+		}
+		w.Write(serial)
+	} else {
+		var methodVote func(comsoc.Profile) ([]comsoc.Alternative, error)
+		switch rsa.ballotsList[req.BallotId].Rule {
+		case "borda":
+			methodVote = comsoc.BordaSCF
+		case "condorcet":
+			methodVote = comsoc.CondorcetWinner
+		case "copeland":
+			methodVote = comsoc.CopelandSCF
+		case "majority":
+			methodVote = comsoc.MajoritySCF
+		case "stv":
+			methodVote = comsoc.STV_SCF
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : type %s is not authorized for ballot %s", rsa.ballotsList[req.BallotId].Rule, req.BallotId)
+			w.Write([]byte(msg))
+			return
+		}
+		fmt.Println(rsa.ballotsMap[req.BallotId])
+		scf, err := methodVote(rsa.ballotsMap[req.BallotId])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+			w.Write([]byte(msg))
+			return
+		}
+		resp.Winner = scf[0]
+		w.WriteHeader(http.StatusOK)
+		serial, err := json.Marshal(resp)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : can't serialize response for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+			w.Write([]byte(msg))
+			return
+		}
+		w.Write(serial)
 	}
-	w.WriteHeader(http.StatusOK)
-	serial, err := json.Marshal(resp)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := "Error while processing result (JSON) " + err.Error()
-		w.Write([]byte(msg))
-		return
-	}
-	w.Write(serial)
+
 }

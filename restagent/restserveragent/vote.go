@@ -41,18 +41,50 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("Serveur recoit : ", r.URL, req)
 	//Vérifie que le ballot existe
-	_, found := rsa.ballotsList[req.VoteId]
+	_, found := rsa.ballotsList[req.BallotId]
 	if !found {
 		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /vote : ballot %s does not exist", req.VoteId)
+		msg := fmt.Sprintf("error /vote : ballot %s does not exist", req.BallotId)
 		w.Write([]byte(msg))
 		return
 	}
 
-	//TODO : vérifir que l'agent n'a pas déjà voté
+	//vérifie que l'agent n'a pas déjà voté
+	fmt.Println("Ont voté  : ", rsa.ballotsList[req.BallotId].HaveVoted)
+	for _, v := range rsa.ballotsList[req.BallotId].HaveVoted {
+		if v == req.AgentId {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /vote : agent %s has already voted for ballot %s", req.AgentId, req.BallotId)
+			w.Write([]byte(msg))
+			return
+		}
+	}
+
+	//Vérifie que l'agent a le droit de voter
+	var canVote bool
+	for _, v := range rsa.ballotsList[req.BallotId].VoterIds {
+		if v == req.AgentId {
+			canVote = true
+			break
+		}
+	}
+	if !canVote {
+		w.WriteHeader(http.StatusBadRequest)
+		msg := fmt.Sprintf("error /vote : agent %s is not allowed to vote for ballot %s", req.AgentId, req.BallotId)
+		w.Write([]byte(msg))
+		return
+	}
 
 	//Enregistre le vote pour le ballot
-	rsa.ballotsMap[req.VoteId] = append(rsa.ballotsMap[req.VoteId], req.Prefs)
+	rsa.ballotsMap[req.BallotId] = append(rsa.ballotsMap[req.BallotId], req.Prefs)
+
+	//Enregistre que l'agent a voté : TODO ne marche pas
+	for i := 0; i < len(rsa.ballotsList[req.BallotId].HaveVoted); i++ {
+		if rsa.ballotsList[req.BallotId].HaveVoted[i] == "" {
+			rsa.ballotsList[req.BallotId].HaveVoted[i] = req.AgentId
+			break
+		}
+	}
 
 	w.WriteHeader(http.StatusOK)
 	serial, err := json.Marshal(req)

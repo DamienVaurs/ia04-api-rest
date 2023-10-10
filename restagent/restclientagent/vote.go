@@ -28,9 +28,9 @@ func (rca *RestClientAgent) doRequestVote(voteId string) (err error) {
 
 	//Préparation de la requête
 	req := restagent.RequestVote{
-		AgentId: rca.id,
-		VoteId:  voteId,
-		Prefs:   rca.prefs,
+		AgentId:  rca.id,
+		BallotId: voteId,
+		Prefs:    rca.prefs,
 		//TODO : voir si on ajoute option ou pas
 	}
 

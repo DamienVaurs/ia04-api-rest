@@ -67,13 +67,7 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 		return
 	}
 	//Enregistre le nouveau ballot
-	rsa.ballotsList[req.BallotId] = restagent.Ballot{
-		BallotId: req.BallotId,
-		Rule:     req.Rule,
-		Deadline: req.Deadline,
-		VoterIds: req.VoterIds,
-		Alts:     req.Alts,
-		TieBreak: req.TieBreak}
+	rsa.ballotsList[req.BallotId] = restagent.NewBallot(req.BallotId, req.Rule, req.Deadline, req.VoterIds, req.Alts, req.TieBreak)
 
 	w.WriteHeader(http.StatusOK)
 	serial, err := json.Marshal(req)

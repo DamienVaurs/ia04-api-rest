@@ -16,8 +16,8 @@ type RestServerAgent struct {
 	sync.Mutex  //les requêtes doivent se faire l'une après l'autre, car certaines requêtes votent, d'autres demandes les résultats
 	id          string
 	addr        string
-	ballotsMap  map[string]comsoc.Profile
-	ballotsList map[string]restagent.Ballot
+	ballotsMap  map[string]comsoc.Profile   //associe l'id d'un ballot à son Profil
+	ballotsList map[string]restagent.Ballot //associe l'id d'un ballot à son objet Ballot
 }
 
 func NewRestServerAgent(addr string) *RestServerAgent {
