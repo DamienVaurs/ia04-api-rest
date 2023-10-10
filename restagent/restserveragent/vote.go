@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
@@ -97,12 +96,12 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Vérifie que la date de fin est n'est pas passée
-	if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
+	/*if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
 		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /result : ballot %s is already fnished", req.BallotId)
+		msg := fmt.Sprintf("error /result : ballot %s is already finished", req.BallotId)
 		w.Write([]byte(msg))
 		return
-	}
+	}*/
 
 	//Vérifie que les alteratives fournies pour le vote sont correctes
 	if !checkVoteAlts(req.Prefs, rsa.ballotsList[req.BallotId].Alts) {
@@ -115,7 +114,7 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	//Enregistre le vote pour le ballot
 	rsa.ballotsMap[req.BallotId] = append(rsa.ballotsMap[req.BallotId], req.Prefs)
 
-	//Enregistre que l'agent a voté : TODO ne marche pas
+	//Enregistre que l'agent a voté
 	for i := 0; i < len(rsa.ballotsList[req.BallotId].HaveVoted); i++ {
 		if rsa.ballotsList[req.BallotId].HaveVoted[i] == "" {
 			rsa.ballotsList[req.BallotId].HaveVoted[i] = req.AgentId

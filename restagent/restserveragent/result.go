@@ -62,8 +62,9 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 	resp := restagent.ResponseResult{}
 	if rsa.ballotsList[req.BallotId].Rule == "approval" {
 		//Vérifie que le ballot a bien un seuil
+
 		//TODO : appliquer le threshold pour ApprovalSCF
-		scf, ranking, err := comsoc.ApprovalSCF(rsa.ballotsMap[req.BallotId], []int{1})
+		scf, err := comsoc.ApprovalSCF(rsa.ballotsMap[req.BallotId], []int{1})
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
@@ -71,7 +72,6 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		resp.Winner = scf[0]
-		resp.Ranking = ranking
 		w.WriteHeader(http.StatusOK)
 		serial, err := json.Marshal(resp)
 		if err != nil {
@@ -81,7 +81,10 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		w.Write(serial)
+
+		//TODO : appliquer le ranking et le tie-break pour Approval
 	} else if rsa.ballotsList[req.BallotId].Rule == "condorcet" {
+		//TODO : appliquer le ranking et le tie-break pour Approval
 		scf, err := comsoc.CondorcetWinner(rsa.ballotsMap[req.BallotId])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -100,32 +103,65 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		}
 		w.Write(serial)
 	} else {
-		var methodVote func(comsoc.Profile) ([]comsoc.Alternative, []comsoc.Alternative, error)
+		var scfVote func(comsoc.Profile) ([]comsoc.Alternative, error)
+		var swfVote func(comsoc.Profile) (comsoc.Count, error)
 		switch rsa.ballotsList[req.BallotId].Rule {
 		case "borda":
-			methodVote = comsoc.BordaSCF
+			scfVote = comsoc.BordaSCF
+			swfVote = comsoc.BordaSWF
 		case "copeland":
-			methodVote = comsoc.CopelandSCF
+			scfVote = comsoc.CopelandSCF
+			swfVote = comsoc.CopelandSWF
 		case "majority":
-			methodVote = comsoc.MajoritySCF
+			scfVote = comsoc.MajoritySCF
+			swfVote = comsoc.MajoritySWF
 		case "stv":
-			methodVote = comsoc.STV_SCF
+			scfVote = comsoc.STV_SCF
+			swfVote = comsoc.STV_SWF
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 			msg := fmt.Sprintf("error /result : type %s is not authorized for ballot %s", rsa.ballotsList[req.BallotId].Rule, req.BallotId)
 			w.Write([]byte(msg))
 			return
 		}
-		fmt.Println(rsa.ballotsMap[req.BallotId])
-		scf, ranking, err := methodVote(rsa.ballotsMap[req.BallotId])
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
-			w.Write([]byte(msg))
-			return
+
+		//Si on a un tie-break, on l'applique pour avoir le meilleur élément et le classement
+		var tieBreak func([]comsoc.Alternative) (comsoc.Alternative, error)
+		if rsa.ballotsList[req.BallotId].TieBreak != nil {
+			fmt.Println("Utilisation d'un tie-break : ", rsa.ballotsList[req.BallotId].TieBreak)
+			tieBreak = comsoc.TieBreakFactory(rsa.ballotsList[req.BallotId].TieBreak)
+			swfFunc := comsoc.SWFFactory(swfVote, tieBreak)
+			res, err := swfFunc(rsa.ballotsMap[req.BallotId])
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				msg := fmt.Sprintf("error /result : can't process SWF with Tie-break for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+				w.Write([]byte(msg))
+				return
+			}
+			resp.Winner = res[0]
+			resp.Ranking = res
+		} else {
+			//Si on n'a pas de tie-break
+			scf, err := scfVote(rsa.ballotsMap[req.BallotId])
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+				w.Write([]byte(msg))
+				return
+			}
+			swf, err := swfVote(rsa.ballotsMap[req.BallotId])
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				msg := fmt.Sprintf("error /result : can't process SWF for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+				w.Write([]byte(msg))
+				return
+			}
+			//Il faut calculer l'ordre du SWF
+			ranking := comsoc.MakeRanking(swf)
+			resp.Winner = scf[0]
+			resp.Ranking = ranking
 		}
-		resp.Winner = scf[0]
-		resp.Ranking = ranking
+
 		w.WriteHeader(http.StatusOK)
 		serial, err := json.Marshal(resp)
 		if err != nil {

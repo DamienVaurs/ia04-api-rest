@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
+	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
 )
 
 // Fonctions qui traitent l'appel à l'API REST pour créer un ballot:
@@ -75,6 +77,33 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 		msg := fmt.Sprintf("error : type %s is not authorized for ballot %s", req.Rule, req.BallotId)
 		w.Write([]byte(msg))
 		return
+	}
+
+	//Vérifie que les alternatives sont cohérentes avec le tie-break
+	if req.Alts < 1 {
+		w.WriteHeader(http.StatusBadRequest)
+		msg := fmt.Sprintf("error /new_ballot : number of alternatives %d is not correct", req.Alts)
+		w.Write([]byte(msg))
+		return
+	}
+	if req.TieBreak != nil {
+		if len(req.TieBreak) != req.Alts {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /new_ballot : number of alternatives %d is not correct with tie-break %v for ballot %s", req.Alts, req.TieBreak, req.BallotId)
+			w.Write([]byte(msg))
+			return
+		}
+		list := make([]comsoc.Alternative, len(req.TieBreak))
+		copy(list, req.TieBreak)
+		sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
+		for i := 0; i < len(req.TieBreak)-1; i++ {
+			if list[i]+1 != list[i+1] {
+				w.WriteHeader(http.StatusBadRequest)
+				msg := fmt.Sprintf("error /new_ballot : tie-break %v is not correct for ballot %s", req.TieBreak, req.BallotId)
+				w.Write([]byte(msg))
+				return
+			}
+		}
 	}
 
 	//Enregistre le nouveau ballot

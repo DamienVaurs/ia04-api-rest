@@ -72,10 +72,10 @@ func STV_SWF(p Profile) (Count, error) {
 	return resMap, nil
 }
 
-func STV_SCF(p Profile) (bestAlts []Alternative, ranking []Alternative, err error) {
+func STV_SCF(p Profile) (bestAlts []Alternative, err error) {
 	count, err := STV_SWF(p)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return maxCount(count), MakeRanking(count), nil
+	return maxCount(count), nil
 }

@@ -28,10 +28,10 @@ func BordaSWF(p Profile) (Count, error) {
 
 }
 
-func BordaSCF(p Profile) (bestAlts []Alternative, ranking []Alternative, err error) {
+func BordaSCF(p Profile) (bestAlts []Alternative, err error) {
 	count, err := BordaSWF(p)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return maxCount(count), MakeRanking(count), nil
+	return maxCount(count), nil
 }
