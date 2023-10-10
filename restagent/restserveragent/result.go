@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
@@ -45,6 +46,14 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 	if !found {
 		w.WriteHeader(http.StatusBadRequest)
 		msg := fmt.Sprintf("error /result : ballot %s does not exist", req.BallotId)
+		w.Write([]byte(msg))
+		return
+	}
+
+	//Vérifie que la date de fin est passée
+	if rsa.ballotsList[req.BallotId].Deadline.After(time.Now()) {
+		w.WriteHeader(http.StatusBadRequest)
+		msg := fmt.Sprintf("error /result : ballot %s is not finished yet", req.BallotId)
 		w.Write([]byte(msg))
 		return
 	}

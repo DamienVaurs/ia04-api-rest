@@ -45,7 +45,7 @@ func maxCount(count Count) (bestAlts []Alternative) {
 // vérifie le profil donné, par ex. qu'ils sont tous complets et que chaque alternative n'apparaît qu'une seule fois par préférences
 func checkProfile(prefs Profile) error {
 	if len(prefs) < 1 {
-		return errors.New("le profil est vide")
+		return errors.New("aucun vote n'a été soumis")
 	}
 	if len(prefs[0]) < 2 {
 		return errors.New("moins de 2 candidats")

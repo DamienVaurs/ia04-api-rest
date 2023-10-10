@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 )
@@ -44,10 +45,19 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 	}
 	fmt.Println("Serveur recoit : ", r.URL, req)
 	//Vérifie que le ballot n'existe pas déjà
-	_, found := rsa.ballotsMap[req.BallotId]
+	_, found := rsa.ballotsList[req.BallotId]
 	if found {
 		w.WriteHeader(http.StatusBadRequest)
 		msg := fmt.Sprintf("error /new_ballot : ballot %s already exists", req.BallotId)
+		w.Write([]byte(msg))
+		return
+	}
+
+	//Vérifie que le format de date est bon
+	_, err = time.Parse("Mon Jan 02 15:04:05 MST 2006", req.Deadline)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		msg := fmt.Sprintf("error /new_ballot : deadline %s is not in the right format", req.Deadline)
 		w.Write([]byte(msg))
 		return
 	}
@@ -66,9 +76,15 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 		w.Write([]byte(msg))
 		return
 	}
-	//Enregistre le nouveau ballot
-	rsa.ballotsList[req.BallotId] = restagent.NewBallot(req.BallotId, req.Rule, req.Deadline, req.VoterIds, req.Alts, req.TieBreak)
 
+	//Enregistre le nouveau ballot
+	rsa.ballotsList[req.BallotId], err = restagent.NewBallot(req.BallotId, req.Rule, req.Deadline, req.VoterIds, req.Alts, req.TieBreak)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		msg := fmt.Sprintf("error /new_ballot : can't create ballot %s. "+err.Error(), req.BallotId)
+		w.Write([]byte(msg))
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	serial, err := json.Marshal(req)
 	if err != nil {
@@ -77,4 +93,5 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 		return
 	}
 	w.Write(serial)
+	fmt.Println("Liste ballots : ", rsa.ballotsList)
 }

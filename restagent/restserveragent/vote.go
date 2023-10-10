@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 )
@@ -71,6 +72,14 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	if !canVote {
 		w.WriteHeader(http.StatusBadRequest)
 		msg := fmt.Sprintf("error /vote : agent %s is not allowed to vote for ballot %s", req.AgentId, req.BallotId)
+		w.Write([]byte(msg))
+		return
+	}
+
+	//Vérifie que la date de fin est n'est pas passée
+	if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
+		w.WriteHeader(http.StatusBadRequest)
+		msg := fmt.Sprintf("error /result : ballot %s is already fnished", req.BallotId)
 		w.Write([]byte(msg))
 		return
 	}
