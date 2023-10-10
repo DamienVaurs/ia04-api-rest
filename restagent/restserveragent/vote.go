@@ -44,6 +44,42 @@ func checkVoteAlts(vote []comsoc.Alternative, expected int) bool {
 	return true
 }
 
+func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVote) (err error) {
+	//Vérifie que le ballot existe
+	_, found := ballotsList[req.BallotId]
+	if !found {
+		return fmt.Errorf("notexist")
+	}
+	//vérifie que l'agent n'a pas déjà voté
+	fmt.Println("Ont voté  : ", ballotsList[req.BallotId].HaveVoted)
+	for _, v := range ballotsList[req.BallotId].HaveVoted {
+		if v == req.AgentId {
+			return fmt.Errorf("alreadyvoted")
+		}
+	}
+	//Vérifie que l'agent a le droit de voter
+	var canVote bool
+	for _, v := range ballotsList[req.BallotId].VoterIds {
+		if v == req.AgentId {
+			canVote = true
+			break
+		}
+	}
+	if !canVote {
+		return fmt.Errorf("notallowed")
+	}
+
+	//Vérifie que la date de fin est n'est pas passée
+	/*if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
+		return fmt.Errorf("alreadyfinished")
+	}*/
+	//Vérifie que les alteratives fournies pour le vote sont correctes
+	if !checkVoteAlts(req.Prefs, ballotsList[req.BallotId].Alts) {
+		return fmt.Errorf("wrongalts")
+	}
+	return nil
+}
+
 func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	rsa.Lock()
 	defer rsa.Unlock()
@@ -60,55 +96,39 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("Serveur recoit : ", r.URL, req)
-	//Vérifie que le ballot existe
-	_, found := rsa.ballotsList[req.BallotId]
-	if !found {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /vote : ballot %s does not exist", req.BallotId)
-		w.Write([]byte(msg))
-		return
-	}
 
-	//vérifie que l'agent n'a pas déjà voté
-	fmt.Println("Ont voté  : ", rsa.ballotsList[req.BallotId].HaveVoted)
-	for _, v := range rsa.ballotsList[req.BallotId].HaveVoted {
-		if v == req.AgentId {
+	//Vérifie que le vote est correct
+	err = checkVote(rsa.ballotsList, req)
+	if err != nil {
+		switch err.Error() {
+		case "notexist":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /vote : ballot %s does not exist", req.BallotId)
+			w.Write([]byte(msg))
+			return
+		case "alreadyvoted":
 			w.WriteHeader(http.StatusBadRequest)
 			msg := fmt.Sprintf("error /vote : agent %s has already voted for ballot %s", req.AgentId, req.BallotId)
 			w.Write([]byte(msg))
 			return
+		case "notallowed":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /vote : agent %s is not allowed to vote for ballot %s", req.AgentId, req.BallotId)
+			w.Write([]byte(msg))
+			return
+		case "alreadyfinished":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /vote : ballot %s is already finished : %s", req.BallotId, rsa.ballotsList[req.BallotId].Deadline.String())
+			w.Write([]byte(msg))
+			return
+		case "wrongalts":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /vote : alternatives provided for ballot %s are not correct", req.BallotId)
+			w.Write([]byte(msg))
+			return
+		default:
+			fmt.Println("Vote correct ", req)
 		}
-	}
-
-	//Vérifie que l'agent a le droit de voter
-	var canVote bool
-	for _, v := range rsa.ballotsList[req.BallotId].VoterIds {
-		if v == req.AgentId {
-			canVote = true
-			break
-		}
-	}
-	if !canVote {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /vote : agent %s is not allowed to vote for ballot %s", req.AgentId, req.BallotId)
-		w.Write([]byte(msg))
-		return
-	}
-
-	//Vérifie que la date de fin est n'est pas passée
-	/*if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /result : ballot %s is already finished", req.BallotId)
-		w.Write([]byte(msg))
-		return
-	}*/
-
-	//Vérifie que les alteratives fournies pour le vote sont correctes
-	if !checkVoteAlts(req.Prefs, rsa.ballotsList[req.BallotId].Alts) {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /vote : alternatives provided for ballot %s are not correct", req.BallotId)
-		w.Write([]byte(msg))
-		return
 	}
 
 	//Enregistre le vote pour le ballot

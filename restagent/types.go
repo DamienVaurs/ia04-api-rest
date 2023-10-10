@@ -16,13 +16,14 @@ type Response struct {
 
 // Types utilisés pour la requête /new_ballot
 type Ballot struct {
-	BallotId  string //Champ rajouté, pas dans sujet
-	Rule      string
-	Deadline  time.Time
-	VoterIds  []string
-	Alts      int
-	TieBreak  []comsoc.Alternative
-	HaveVoted []string //Contient le nom des agents ayant voté
+	BallotId   string //Champ rajouté, pas dans sujet
+	Rule       string
+	Deadline   time.Time
+	VoterIds   []string
+	Alts       int
+	TieBreak   []comsoc.Alternative
+	HaveVoted  []string       //Contient le nom des agents ayant voté
+	Thresholds map[string]int //Contient les seuils de chaque candidat (pour vote par approbation)
 }
 
 func NewBallot(ballotId string, rule string, deadline string, voterIds []string, alts int, tieBreak []comsoc.Alternative) (Ballot, error) {
@@ -32,7 +33,8 @@ func NewBallot(ballotId string, rule string, deadline string, voterIds []string,
 		return Ballot{}, err
 	}
 	l := make([]string, len(voterIds))
-	return Ballot{ballotId, rule, date, voterIds, alts, tieBreak, l}, nil
+	t := make(map[string]int)
+	return Ballot{ballotId, rule, date, voterIds, alts, tieBreak, l, t}, nil
 }
 
 type RequestNewBallot struct {
