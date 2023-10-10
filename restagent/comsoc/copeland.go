@@ -68,10 +68,10 @@ func CopelandSWF(p Profile) (Count, error) {
 	return resMap, nil
 
 }
-func CopelandSCF(p Profile) (bestAlts []Alternative, err error) {
+func CopelandSCF(p Profile) (bestAlts []Alternative, ranking []Alternative, err error) {
 	count, err := CopelandSWF(p)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return maxCount(count), nil
+	return maxCount(count), MakeRanking(count), nil
 }

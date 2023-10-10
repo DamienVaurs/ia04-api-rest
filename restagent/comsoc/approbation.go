@@ -26,10 +26,10 @@ func ApprovalSWF(p Profile, thresholds []int) (count Count, err error) {
 	return count, nil
 }
 
-func ApprovalSCF(p Profile, thresholds []int) (bestAlts []Alternative, err error) {
+func ApprovalSCF(p Profile, thresholds []int) (bestAlts []Alternative, ranking []Alternative, err error) {
 	count, err := ApprovalSWF(p, thresholds)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return maxCount(count), nil
+	return maxCount(count), MakeRanking(count), nil
 }

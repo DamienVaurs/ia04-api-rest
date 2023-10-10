@@ -63,7 +63,26 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 	if rsa.ballotsList[req.BallotId].Rule == "approval" {
 		//Vérifie que le ballot a bien un seuil
 		//TODO : appliquer le threshold pour ApprovalSCF
-		scf, err := comsoc.ApprovalSCF(rsa.ballotsMap[req.BallotId], []int{1})
+		scf, ranking, err := comsoc.ApprovalSCF(rsa.ballotsMap[req.BallotId], []int{1})
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+			w.Write([]byte(msg))
+			return
+		}
+		resp.Winner = scf[0]
+		resp.Ranking = ranking
+		w.WriteHeader(http.StatusOK)
+		serial, err := json.Marshal(resp)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : can't serialize response for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+			w.Write([]byte(msg))
+			return
+		}
+		w.Write(serial)
+	} else if rsa.ballotsList[req.BallotId].Rule == "condorcet" {
+		scf, err := comsoc.CondorcetWinner(rsa.ballotsMap[req.BallotId])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
@@ -81,12 +100,10 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		}
 		w.Write(serial)
 	} else {
-		var methodVote func(comsoc.Profile) ([]comsoc.Alternative, error)
+		var methodVote func(comsoc.Profile) ([]comsoc.Alternative, []comsoc.Alternative, error)
 		switch rsa.ballotsList[req.BallotId].Rule {
 		case "borda":
 			methodVote = comsoc.BordaSCF
-		case "condorcet":
-			methodVote = comsoc.CondorcetWinner
 		case "copeland":
 			methodVote = comsoc.CopelandSCF
 		case "majority":
@@ -100,7 +117,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		fmt.Println(rsa.ballotsMap[req.BallotId])
-		scf, err := methodVote(rsa.ballotsMap[req.BallotId])
+		scf, ranking, err := methodVote(rsa.ballotsMap[req.BallotId])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
@@ -108,6 +125,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		resp.Winner = scf[0]
+		resp.Ranking = ranking
 		w.WriteHeader(http.StatusOK)
 		serial, err := json.Marshal(resp)
 		if err != nil {
