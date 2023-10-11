@@ -37,7 +37,7 @@ func checkVoteAlts(vote []comsoc.Alternative, expected int) bool {
 	copy(list, vote)
 	sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
 	for i := 0; i < expected-1; i++ {
-		if list[i] != comsoc.Alternative(i+1) {
+		if list[i] != list[i+1]-1 {
 			return false
 		}
 	}
@@ -51,7 +51,6 @@ func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVot
 		return fmt.Errorf("notexist")
 	}
 	//vérifie que l'agent n'a pas déjà voté
-	fmt.Println("Ont voté  : ", ballotsList[req.BallotId].HaveVoted)
 	for _, v := range ballotsList[req.BallotId].HaveVoted {
 		if v == req.AgentId {
 			return fmt.Errorf("alreadyvoted")
@@ -73,6 +72,7 @@ func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVot
 	/*if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
 		return fmt.Errorf("alreadyfinished")
 	}*/
+
 	//Vérifie que les alteratives fournies pour le vote sont correctes
 	if !checkVoteAlts(req.Prefs, ballotsList[req.BallotId].Alts) {
 		return fmt.Errorf("wrongalts")
@@ -143,12 +143,4 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	serial, err := json.Marshal(req)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, err.Error())
-		return
-	}
-
-	w.Write(serial)
 }

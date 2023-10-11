@@ -128,7 +128,6 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		//Si on a un tie-break, on l'applique pour avoir le meilleur élément et le classement
 		var tieBreak func([]comsoc.Alternative) (comsoc.Alternative, error)
 		if rsa.ballotsList[req.BallotId].TieBreak != nil {
-			fmt.Println("Utilisation d'un tie-break : ", rsa.ballotsList[req.BallotId].TieBreak)
 			tieBreak = comsoc.TieBreakFactory(rsa.ballotsList[req.BallotId].TieBreak)
 			swfFunc := comsoc.SWFFactory(swfVote, tieBreak)
 			res, err := swfFunc(rsa.ballotsMap[req.BallotId])

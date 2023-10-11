@@ -13,17 +13,17 @@ import (
 )
 
 type RestServerAgent struct {
-	sync.Mutex  //les requêtes doivent se faire l'une après l'autre, car certaines requêtes votent, d'autres demandes les résultats
-	id          string
-	addr        string
+	sync.Mutex                              //les requêtes doivent se faire l'une après l'autre, car certaines requêtes votent, d'autres demandes les résultats
+	addr        string                      //adresse du serveur (ip:port)
 	ballotsMap  map[string]comsoc.Profile   //associe l'id d'un ballot à son Profil
 	ballotsList map[string]restagent.Ballot //associe l'id d'un ballot à son objet Ballot
+	countBallot int                         //compteur de ballot (pout générer les ids)
 }
 
 func NewRestServerAgent(addr string) *RestServerAgent {
 	b := make(map[string]comsoc.Profile, 0)
 	l := make(map[string]restagent.Ballot, 0)
-	return &RestServerAgent{id: addr, addr: addr, ballotsMap: b, ballotsList: l}
+	return &RestServerAgent{addr: addr, ballotsMap: b, ballotsList: l, countBallot: 1}
 }
 
 // Test de la méthode (GET, POST, ...)

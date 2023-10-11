@@ -6,29 +6,21 @@ import (
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
 )
 
-type Request struct {
-	Preferences []comsoc.Alternative `json:"pref"`
-}
-
-type Response struct {
-	Result []comsoc.Alternative `json:"res"`
-}
-
 // Types utilisés pour la requête /new_ballot
 type Ballot struct {
-	BallotId   string //Champ rajouté, pas dans sujet
-	Rule       string
-	Deadline   time.Time
-	VoterIds   []string
-	Alts       int
-	TieBreak   []comsoc.Alternative
-	HaveVoted  []string       //Contient le nom des agents ayant voté
-	Thresholds map[string]int //Contient les seuils de chaque candidat (pour vote par approbation)
+	BallotId   string               //Identifiant du ballot
+	Rule       string               //Méthode de vote
+	Deadline   time.Time            //Date limite de vote
+	VoterIds   []string             //Liste des agents pouvant voter
+	Alts       int                  //Alternatives de 1 à Alts
+	TieBreak   []comsoc.Alternative //Ordre de préférence des alternatives en cas d'égalité
+	HaveVoted  []string             //Noms des agents ayant voté
+	Thresholds map[string]int       //Contient les seuils de chaque candidat (pour vote par approbation)
 }
 
 func NewBallot(ballotId string, rule string, deadline string, voterIds []string, alts int, tieBreak []comsoc.Alternative) (Ballot, error) {
 	//Vérifie que le format de date est bon
-	date, err := time.Parse("Mon Jan 02 15:04:05 MST 2006", deadline)
+	date, err := time.Parse(time.RFC3339, deadline)
 	if err != nil {
 		return Ballot{}, err
 	}
@@ -38,7 +30,6 @@ func NewBallot(ballotId string, rule string, deadline string, voterIds []string,
 }
 
 type RequestNewBallot struct {
-	BallotId string               `json:"ballot-id"` //Champ rajouté, pas dans sujet
 	Rule     string               `json:"rule"`
 	Deadline string               `json:"deadline"`
 	VoterIds []string             `json:"voter-ids"`

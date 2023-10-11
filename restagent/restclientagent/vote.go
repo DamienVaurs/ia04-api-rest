@@ -13,17 +13,6 @@ import (
 // Fonctions qui réalisent l'appel à l'API REST pour voter :
 // http://localhost:8080/vote
 
-func (rca *RestClientAgent) treatResponseVote(r *http.Response) error {
-	//TODO : à voir si vraiment utile
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(r.Body)
-
-	var resp restagent.Response
-	err := json.Unmarshal(buf.Bytes(), &resp)
-
-	return err
-}
-
 func (rca *RestClientAgent) doRequestVote(voteId string) (err error) {
 
 	//Préparation de la requête

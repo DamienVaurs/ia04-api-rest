@@ -30,8 +30,51 @@ func (*RestServerAgent) decodeNewBallotRequest(r *http.Request) (req restagent.R
 	return
 }
 
+// Effectue plusieurs vérifications sur le scrutin fournit
+func checkBallot(req restagent.RequestNewBallot) (err error) {
+	//Vérifie que le format de date est bon
+	_, err = time.Parse(time.RFC3339, req.Deadline) //A vérifier
+	if err != nil {
+		return fmt.Errorf("deadline")
+	}
+
+	//Vérifie que le type de ballot est autorisé
+	var authorized = false
+	for _, v := range typeBallot {
+		if v == req.Rule {
+			authorized = true
+			break
+		}
+	}
+	if !authorized {
+		return fmt.Errorf("rule")
+	}
+
+	//Vérifie que les alternatives sont cohérentes avec le tie-break
+	if req.Alts < 1 {
+		return fmt.Errorf("alts")
+	}
+
+	//Vérifie que le tie-break est cohérent avec les alternatives
+	if req.TieBreak == nil || len(req.TieBreak) != req.Alts {
+		return fmt.Errorf("tiebreak")
+	} else {
+		//Vérifie qu'il n'y a pas de doublon dans le tie-break ni de valeur abérante
+		list := make([]comsoc.Alternative, len(req.TieBreak))
+		copy(list, req.TieBreak)
+		sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
+		for i := 0; i < len(req.TieBreak)-1; i++ {
+			if list[i]+1 != list[i+1] {
+				return fmt.Errorf("tiebreak")
+			}
+		}
+	}
+
+	return
+}
+
 func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Request) {
-	rsa.Lock()
+	rsa.Lock() // verrouillage de la méthode nécessaire au moins car la méthode vote modifie countBallot. Sinon, on pourrait utiliser une goroutine par ballot
 	defer rsa.Unlock()
 	// vérification de la méthode de la requête
 	if !rsa.checkMethod("POST", w, r) {
@@ -46,81 +89,55 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 		return
 	}
 	fmt.Println("Serveur recoit : ", r.URL, req)
-	//Vérifie que le ballot n'existe pas déjà
-	_, found := rsa.ballotsList[req.BallotId]
-	if found {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /new_ballot : ballot %s already exists", req.BallotId)
-		w.Write([]byte(msg))
-		return
-	}
 
-	//Vérifie que le format de date est bon
-	_, err = time.Parse("Mon Jan 02 15:04:05 MST 2006", req.Deadline)
+	err = checkBallot(req)
+
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /new_ballot : deadline %s is not in the right format", req.Deadline)
-		w.Write([]byte(msg))
-		return
-	}
-
-	//Vérifie que le type de ballot est autorisé
-	var authorized = false
-	for _, v := range typeBallot {
-		if v == req.Rule {
-			authorized = true
-			break
-		}
-	}
-	if !authorized {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error : type %s is not authorized for ballot %s", req.Rule, req.BallotId)
-		w.Write([]byte(msg))
-		return
-	}
-
-	//Vérifie que les alternatives sont cohérentes avec le tie-break
-	if req.Alts < 1 {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /new_ballot : number of alternatives %d is not correct", req.Alts)
-		w.Write([]byte(msg))
-		return
-	}
-	if req.TieBreak != nil {
-		if len(req.TieBreak) != req.Alts {
+		switch err.Error() {
+		case "deadline":
 			w.WriteHeader(http.StatusBadRequest)
-			msg := fmt.Sprintf("error /new_ballot : number of alternatives %d is not correct with tie-break %v for ballot %s", req.Alts, req.TieBreak, req.BallotId)
+			msg := fmt.Sprintf("error /new_ballot : deadline %s is not in the right format", req.Deadline)
 			w.Write([]byte(msg))
 			return
-		}
-		list := make([]comsoc.Alternative, len(req.TieBreak))
-		copy(list, req.TieBreak)
-		sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
-		for i := 0; i < len(req.TieBreak)-1; i++ {
-			if list[i]+1 != list[i+1] {
-				w.WriteHeader(http.StatusBadRequest)
-				msg := fmt.Sprintf("error /new_ballot : tie-break %v is not correct for ballot %s", req.TieBreak, req.BallotId)
-				w.Write([]byte(msg))
-				return
-			}
+		case "rule":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /new_ballot : rule %s is not implemented", req.Rule)
+			w.Write([]byte(msg))
+			return
+		case "alts":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /new_ballot : number of alternatives %d should be >=1", req.Alts)
+			w.Write([]byte(msg))
+			return
+		case "tiebreak":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /new_ballot : given tie-break %d is invalid or doesn't match #alts %d", req.TieBreak, req.Alts)
+			w.Write([]byte(msg))
+			return
 		}
 	}
 
 	//Enregistre le nouveau ballot
-	rsa.ballotsList[req.BallotId], err = restagent.NewBallot(req.BallotId, req.Rule, req.Deadline, req.VoterIds, req.Alts, req.TieBreak)
+	//Remarque : On pourrait mettre un mutex ici si on décidait d'utilisait 1 goroutine par ballot et de ne pas mettre de mutex sur la méthode vote
+	var ballotId string = fmt.Sprintf("scrutin%d", rsa.countBallot)
+	rsa.countBallot++
+	rsa.ballotsList[ballotId], err = restagent.NewBallot(ballotId, req.Rule, req.Deadline, req.VoterIds, req.Alts, req.TieBreak)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /new_ballot : can't create ballot %s. "+err.Error(), req.BallotId)
+		msg := fmt.Sprintf("error /new_ballot : can't create ballot %s. "+err.Error(), ballotId)
+		w.Write([]byte(msg))
+		return
+	}
+	var resp restagent.ResponseNewBallot = restagent.ResponseNewBallot{BallotId: ballotId}
+
+	serial, err := json.Marshal(resp)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		msg := fmt.Sprint("error /new_ballot  : sérialisation de la réponse :", err.Error())
 		w.Write([]byte(msg))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	serial, err := json.Marshal(req)
-	if err != nil {
-		msg := fmt.Sprint("Erreur de sérialisation de la réponse /new_ballot : ", err)
-		w.Write([]byte(msg))
-		return
-	}
 	w.Write(serial)
 	fmt.Println("Liste ballots : ", rsa.ballotsList)
 }
