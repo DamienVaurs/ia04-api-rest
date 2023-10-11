@@ -15,7 +15,7 @@ type Ballot struct {
 	Alts       int                  //Alternatives de 1 à Alts
 	TieBreak   []comsoc.Alternative //Ordre de préférence des alternatives en cas d'égalité
 	HaveVoted  []string             //Noms des agents ayant voté
-	Thresholds map[string]int       //Contient les seuils de chaque candidat (pour vote par approbation)
+	Thresholds map[string]int       //Contient les seuils de chaque votant (pour vote par approbation)
 }
 
 func NewBallot(ballotId string, rule string, deadline string, voterIds []string, alts int, tieBreak []comsoc.Alternative) (Ballot, error) {
@@ -47,7 +47,7 @@ type RequestVote struct {
 	AgentId  string               `json:"agent-id"`
 	BallotId string               `json:"ballot-id"`
 	Prefs    []comsoc.Alternative `json:"prefs"`
-	Options  []any                `json:"options"` //Voir si le type est ok
+	Options  []int                `json:"options"` //Utilisé pour le seuil du vote par approbation
 }
 
 // Types utilisés pour la requête /result
@@ -59,5 +59,5 @@ type RequestResult struct {
 type ResponseResult struct {
 	//Objet renvoyé si code 200
 	Winner  comsoc.Alternative   `json:"winner"`
-	Ranking []comsoc.Alternative `json:"ranking"`
+	Ranking []comsoc.Alternative `json:"ranking,omitempty"` //Champ facultatif
 }

@@ -77,6 +77,15 @@ func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVot
 	if !checkVoteAlts(req.Prefs, ballotsList[req.BallotId].Alts) {
 		return fmt.Errorf("wrongalts")
 	}
+
+	//Si le ballot est "approval" vérifie qu'un seuil cohérent est bien fourni
+	//Remarque : discuter dans le README de ce choix, car on aurait pu imaginer que pas de treshold => on compte tout le monde
+	if ballotsList[req.BallotId].Rule == "approval" {
+		if req.Options == nil || len(req.Options) != 1 || 0 >= req.Options[0] || req.Options[0] > ballotsList[req.BallotId].Alts {
+			//TODO : Vérifier si Threshold commence à 0 ou à 1 pour valider ce test
+			return fmt.Errorf("wrongthreshold")
+		}
+	}
 	return nil
 }
 
@@ -126,8 +135,11 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 			msg := fmt.Sprintf("error /vote : alternatives provided for ballot %s are not correct", req.BallotId)
 			w.Write([]byte(msg))
 			return
-		default:
-			fmt.Println("Vote correct ", req)
+		case "wrongthreshold":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /vote : threshold %d provided for ballot %s is not correct", req.Options, req.BallotId)
+			w.Write([]byte(msg))
+			return
 		}
 	}
 
@@ -140,6 +152,18 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 			rsa.ballotsList[req.BallotId].HaveVoted[i] = req.AgentId
 			break
 		}
+	}
+
+	//Enregistre le threshold si besoin
+	if rsa.ballotsList[req.BallotId].Rule == "approval" {
+		_, found := rsa.ballotsList[req.BallotId].Thresholds[req.AgentId]
+		if found {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /vote : agent %s has already provided a threshold for ballot %s", req.AgentId, req.BallotId)
+			w.Write([]byte(msg))
+			return
+		}
+		rsa.ballotsList[req.BallotId].Thresholds[req.AgentId] = req.Options[0]
 	}
 
 	w.WriteHeader(http.StatusOK)

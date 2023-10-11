@@ -26,6 +26,19 @@ func (*RestServerAgent) decodeResultRequest(r *http.Request) (req restagent.Requ
 	return
 }
 
+func checkResultRequest(ballotsList map[string]restagent.Ballot, req restagent.RequestResult) (err error) {
+	//Vérifie que le ballot existe
+	_, found := ballotsList[req.BallotId]
+	if !found {
+		return fmt.Errorf("notexist")
+	}
+	//Vérifie que la date de fin est passée
+	if ballotsList[req.BallotId].Deadline.After(time.Now()) {
+		return fmt.Errorf("notfinished")
+	}
+	return
+}
+
 func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request) {
 	rsa.Lock()
 	defer rsa.Unlock()
@@ -41,25 +54,26 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	fmt.Println("Serveur recoit : ", r.URL, req)
-	//Vérifie que le ballot existe
-	_, found := rsa.ballotsList[req.BallotId]
-	if !found {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /result : ballot %s does not exist", req.BallotId)
-		w.Write([]byte(msg))
-		return
+
+	//Vérifications sur la requête
+	err = checkResultRequest(rsa.ballotsList, req)
+	if err != nil {
+		switch err.Error() {
+		case "notexist":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : ballot %s does not exist", req.BallotId)
+			w.Write([]byte(msg))
+			return
+		case "notfinished":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : ballot %s is not finished yet. Deadline : %s", req.BallotId, rsa.ballotsList[req.BallotId].Deadline)
+			w.Write([]byte(msg))
+			return
+		}
 	}
 
-	//Vérifie que la date de fin est passée
-	if rsa.ballotsList[req.BallotId].Deadline.After(time.Now()) {
-		w.WriteHeader(http.StatusBadRequest)
-		msg := fmt.Sprintf("error /result : ballot %s is not finished yet", req.BallotId)
-		w.Write([]byte(msg))
-		return
-	}
-
-	// calcule de la réponse en fonction de Ballot.Rule
 	resp := restagent.ResponseResult{}
+
 	if rsa.ballotsList[req.BallotId].Rule == "approval" {
 		//Vérifie que le ballot a bien un seuil
 
@@ -72,7 +86,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		resp.Winner = scf[0]
-		w.WriteHeader(http.StatusOK)
+
 		serial, err := json.Marshal(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -80,11 +94,13 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			w.Write([]byte(msg))
 			return
 		}
+		w.WriteHeader(http.StatusOK)
 		w.Write(serial)
+		return
 
 		//TODO : appliquer le ranking et le tie-break pour Approval
 	} else if rsa.ballotsList[req.BallotId].Rule == "condorcet" {
-		//TODO : appliquer le ranking et le tie-break pour Approval
+		//TODO : appliquer le ranking et le tie-break pour Condorcet
 		scf, err := comsoc.CondorcetWinner(rsa.ballotsMap[req.BallotId])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -93,7 +109,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		resp.Winner = scf[0]
-		w.WriteHeader(http.StatusOK)
+
 		serial, err := json.Marshal(resp)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -101,7 +117,9 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			w.Write([]byte(msg))
 			return
 		}
+		w.WriteHeader(http.StatusOK)
 		w.Write(serial)
+		return
 	} else {
 		var scfVote func(comsoc.Profile) ([]comsoc.Alternative, error)
 		var swfVote func(comsoc.Profile) (comsoc.Count, error)
