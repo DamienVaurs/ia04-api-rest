@@ -2,7 +2,6 @@ package comsoc
 
 import (
 	"errors"
-	"sort"
 )
 
 // renvoie l'indice ou se trouve alt dans prefs
@@ -97,19 +96,4 @@ func checkProfileAlternative(prefs Profile, alts []Alternative) error {
 		}
 	}
 	return nil
-}
-
-func MakeRanking(count Count) (ranking []Alternative) {
-
-	//On parcourt le map
-	ranking = make([]Alternative, len(count))
-	//Comme les alternatives sont entre 1 et len(count) sans trou, on peut remplir naîvement la liste
-	for i := 0; i < len(count); i++ {
-		ranking[i] = Alternative(i + 1)
-	}
-	//On trie la liste en fonction du nombre de votes
-	sort.Slice(ranking, func(i, j int) bool { return count[ranking[i]] > count[ranking[j]] })
-
-	//TODO : vérifier que le classement est correct (ordre décroissant)
-	return
 }

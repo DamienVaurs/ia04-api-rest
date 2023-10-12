@@ -72,7 +72,7 @@ func SWFFactory(swf func(p Profile) (Count, error), tieBreaker func([]Alternativ
 			tab, ok := invCount[i]
 			if ok {
 				//Si on a des candidats correspondant à ce score,
-				//on les tries en fonction du tiebreak et on les ajoute
+				//on les trie en fonction du tiebreak et on les ajoute
 				//au tableau res
 				for len(tab) > 1 {
 					//tant qu'il y a plusieurs éléments égalité,
@@ -113,4 +113,66 @@ func SCFFactory(scf func(p Profile) ([]Alternative, error), tieBreaker func([]Al
 		//On a les meilleures alternatives. On utilise tiebreaker pour départager
 		return tieBreaker(bestAlts)
 	}
+}
+
+func MakeApprovalRankingWithTieBreak(p Profile, threshold []int, tieBreaker func([]Alternative) (Alternative, error)) ([]Alternative, error) {
+	count, err := ApprovalSWF(p, threshold)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]Alternative, len(count))
+	// On remplit res avec les alternatives : plus count[alt] est grand, plus alt est bien classée
+
+	//Idée du prof : on multiplie toutes les alternatives par
+	//nbAlt, et pour chaque alternative ex aequo,
+	//on fait +1, +2 etc pour départager
+	// -> ici, on fait pas ça
+	invCount := make(map[int][]Alternative, len(count)) //dico {score : [candidats]}
+	var maxScore int
+	var minScore int
+	for alt, score := range count {
+		//On remplit le dictionnaire invCount et on enregistre les scores max et min
+		invCount[score] = append(invCount[score], alt)
+		if score > maxScore {
+			maxScore = score
+		} else if score < minScore {
+			minScore = score
+		}
+
+	}
+	var currIndex = 0
+	for i := maxScore; i >= minScore; i-- {
+		tab, ok := invCount[i]
+		if ok {
+			//Si on a des candidats correspondant à ce score,
+			//on les trie en fonction du tiebreak et on les ajoute
+			//au tableau res
+			for len(tab) > 1 {
+				//tant qu'il y a plusieurs éléments égalité,
+				//on retire le meilleur de la liste
+				//et on l'ajoute à res
+				best, err := tieBreaker(tab)
+				if err != nil {
+					return nil, err
+				}
+				res[currIndex] = best
+				currIndex++
+				//On supprime l'élément de tab
+				for i, alt := range tab {
+					if alt == best {
+						tab[i] = tab[len(tab)-1]
+						tab = tab[:len(tab)-1]
+						break
+					}
+				}
+			}
+			if len(tab) == 1 {
+				//On ajoute le dernier élément au tableau
+				res[currIndex] = tab[0]
+				currIndex++
+			}
+		}
+	}
+	return res, nil
+
 }
