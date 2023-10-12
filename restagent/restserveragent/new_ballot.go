@@ -15,9 +15,6 @@ import (
 // Fonctions qui traitent l'appel à l'API REST pour créer un ballot:
 // http://localhost:8080/new_ballot
 
-// Types de ballot autorisés
-var typeBallot []string = []string{"majority", "approval", "condorcet", "copeland", "borda", "stv"}
-
 // Décode la requête
 func (*RestServerAgent) decodeNewBallotRequest(r *http.Request) (req restagent.RequestNewBallot, err error) {
 	buf := new(bytes.Buffer)
@@ -40,7 +37,7 @@ func checkBallot(req restagent.RequestNewBallot) (err error) {
 
 	//Vérifie que le type de ballot est autorisé
 	var authorized = false
-	for _, v := range typeBallot {
+	for _, v := range restagent.Rules {
 		if v == req.Rule {
 			authorized = true
 			break

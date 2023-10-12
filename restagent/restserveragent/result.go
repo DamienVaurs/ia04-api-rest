@@ -40,7 +40,7 @@ func checkResultRequest(ballotsList map[string]restagent.Ballot, req restagent.R
 
 	//Vérifie la cohérence des thresholds (déjà vérifiée à la réception de la requête)
 	//Remarque : on gagne peut-être en sécurité mais on perd en performance
-	if ballotsList[req.BallotId].Rule == "approval" {
+	if ballotsList[req.BallotId].Rule == restagent.Approval {
 		var nbVotant int
 		for ; nbVotant < len(ballotsList[req.BallotId].HaveVoted) && ballotsList[req.BallotId].HaveVoted[nbVotant] != ""; nbVotant++ {
 		}
@@ -124,7 +124,8 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if rsa.ballotsList[req.BallotId].Rule == "approval" {
+	if rsa.ballotsList[req.BallotId].Rule == restagent.Approval {
+		//Cas particulier de l'approbation, car demande un paramètre supplémentaire
 
 		//Transforme le map Threshold en list
 		thresholds := make([]int, 0)
@@ -134,7 +135,6 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			}
 			thresholds = append(thresholds, rsa.ballotsList[req.BallotId].Thresholds[v])
 		}
-		//TODO : vérifier que ça marche bien
 		tiebreak := comsoc.TieBreakFactory(rsa.ballotsList[req.BallotId].TieBreak)
 		swf, err := comsoc.MakeApprovalRankingWithTieBreak(rsa.ballotsMap[req.BallotId], thresholds, tiebreak)
 
@@ -159,7 +159,8 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		w.Write(serial)
 		return
 
-	} else if rsa.ballotsList[req.BallotId].Rule == "condorcet" {
+	} else if rsa.ballotsList[req.BallotId].Rule == restagent.Condorcet {
+		//Cas particulier de Condorcet, car le calcule de SWF n'est pas possible
 		//TODO : appliquer le ranking? et le tie-break pour Condorcet
 		scf, err := comsoc.CondorcetWinner(rsa.ballotsMap[req.BallotId])
 		if err != nil {
@@ -183,16 +184,13 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 	} else {
 		var swfVote func(comsoc.Profile) (comsoc.Count, error)
 		switch rsa.ballotsList[req.BallotId].Rule {
-		case "borda":
-
+		case restagent.Borda:
 			swfVote = comsoc.BordaSWF
-		case "copeland":
+		case restagent.Copeland:
 			swfVote = comsoc.CopelandSWF
-		case "majority":
-
+		case restagent.Majority:
 			swfVote = comsoc.MajoritySWF
-		case "stv":
-
+		case restagent.STV:
 			swfVote = comsoc.STV_SWF
 		default:
 			w.WriteHeader(http.StatusBadRequest)

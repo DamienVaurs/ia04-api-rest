@@ -145,7 +145,7 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Enregistre le threshold si besoin
-	if rsa.ballotsList[req.BallotId].Rule == "approval" {
+	if rsa.ballotsList[req.BallotId].Rule == restagent.Approval {
 		_, found := rsa.ballotsList[req.BallotId].Thresholds[req.AgentId]
 		if found {
 			w.WriteHeader(http.StatusBadRequest)
