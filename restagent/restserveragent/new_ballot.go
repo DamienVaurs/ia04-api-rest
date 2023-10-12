@@ -92,22 +92,22 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		switch err.Error() {
 		case "deadline":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /new_ballot : deadline %s is not in the right format", req.Deadline)
 			w.Write([]byte(msg))
 			return
 		case "rule":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusNotImplemented) //501
 			msg := fmt.Sprintf("error /new_ballot : rule %s is not implemented", req.Rule)
 			w.Write([]byte(msg))
 			return
 		case "alts":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /new_ballot : number of alternatives %d should be >=1", req.Alts)
 			w.Write([]byte(msg))
 			return
 		case "tiebreak":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /new_ballot : given tie-break %d is invalid or doesn't match #alts %d", req.TieBreak, req.Alts)
 			w.Write([]byte(msg))
 			return
@@ -120,7 +120,7 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 	rsa.countBallot++
 	rsa.ballotsList[ballotId], err = restagent.NewBallot(ballotId, req.Rule, req.Deadline, req.VoterIds, req.Alts, req.TieBreak)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError) //500
 		msg := fmt.Sprintf("error /new_ballot : can't create ballot %s. "+err.Error(), ballotId)
 		w.Write([]byte(msg))
 		return
@@ -129,12 +129,12 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 
 	serial, err := json.Marshal(resp)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError) //500
 		msg := fmt.Sprint("error /new_ballot  : sérialisation de la réponse :", err.Error())
 		w.Write([]byte(msg))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated) //201
 	w.Write(serial)
 	fmt.Println("Liste ballots : ", rsa.ballotsList)
 }

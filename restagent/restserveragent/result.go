@@ -69,7 +69,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 
 	req, err := rsa.decodeResultRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest) //400
 		fmt.Fprint(w, err.Error())
 		return
 	}
@@ -80,23 +80,23 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		switch err.Error() {
 		case "notexist":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusNotFound) //404
 			msg := fmt.Sprintf("error /result : ballot %s does not exist", req.BallotId)
 			w.Write([]byte(msg))
 			return
 		case "notfinished":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusTooEarly) //425
 			msg := fmt.Sprintf("error /result : ballot %s is not finished yet. Deadline : %s", req.BallotId, rsa.ballotsList[req.BallotId].Deadline)
 			w.Write([]byte(msg))
 			return
 
 		case "thresholdnumber":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /result : ballot %s has not the same number of thresholds and voters", req.BallotId)
 			w.Write([]byte(msg))
 			return
 		case "thresholdvalue":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /result : ballot %s is approval and has a threshold value not in [0, %d]", req.BallotId, rsa.ballotsList[req.BallotId].Alts)
 			w.Write([]byte(msg))
 			return
@@ -114,12 +114,12 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 
 		serial, err := json.Marshal(resp)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError) //500
 			msg := fmt.Sprintf("error /result : can't serialize response for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
 			w.Write([]byte(msg))
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusOK) //200
 		w.Write(serial)
 		return
 	}
@@ -139,7 +139,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		swf, err := comsoc.MakeApprovalRankingWithTieBreak(rsa.ballotsMap[req.BallotId], thresholds, tiebreak)
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError) //500
 			msg := fmt.Sprintf("error /result : can't process SWF for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
 			w.Write([]byte(msg))
 			return
@@ -150,21 +150,23 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 
 		serial, err := json.Marshal(resp)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError) //500
 			msg := fmt.Sprintf("error /result : can't serialize response for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
 			w.Write([]byte(msg))
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusOK) //200
 		w.Write(serial)
 		return
 
 	} else if rsa.ballotsList[req.BallotId].Rule == restagent.Condorcet {
 		//Cas particulier de Condorcet, car le calcule de SWF n'est pas possible
 		//TODO : appliquer le ranking? et le tie-break pour Condorcet
+		//TODO : demander au prof si le tie-break est utilisé pour départager durant le calcul (pareil pour Copeland) ou si il n'est utiliser que pour départager au sein du SWF.
+		// TODO suite : si pas utiliser durant le calcul, alors tie-break n'a pas de sens pour Condorcet
 		scf, err := comsoc.CondorcetWinner(rsa.ballotsMap[req.BallotId])
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError) //500
 			msg := fmt.Sprintf("error /result : can't process SCF for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
 			w.Write([]byte(msg))
 			return
@@ -173,12 +175,12 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 
 		serial, err := json.Marshal(resp)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError) //500
 			msg := fmt.Sprintf("error /result : can't serialize response for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
 			w.Write([]byte(msg))
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusOK) //200
 		w.Write(serial)
 		return
 	} else {
@@ -193,19 +195,18 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		case restagent.STV:
 			swfVote = comsoc.STV_SWF
 		default:
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /result : type %s is not authorized for ballot %s", rsa.ballotsList[req.BallotId].Rule, req.BallotId)
 			w.Write([]byte(msg))
 			return
 		}
 
 		//on applique le tie-break pour avoir le meilleur élément et le classement
-		//TODO : on est sûr que ça marche pour STV?
 		var tieBreak = comsoc.TieBreakFactory(rsa.ballotsList[req.BallotId].TieBreak)
 		swfFunc := comsoc.SWFFactory(swfVote, tieBreak)
 		res, err := swfFunc(rsa.ballotsMap[req.BallotId])
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError) //500
 			msg := fmt.Sprintf("error /result : can't process SWF with Tie-break for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
 			w.Write([]byte(msg))
 			return
@@ -213,14 +214,14 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		resp.Winner = res[0]
 		resp.Ranking = res
 
-		w.WriteHeader(http.StatusOK)
 		serial, err := json.Marshal(resp)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError) //500
 			msg := fmt.Sprintf("error /result : can't serialize response for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
 			w.Write([]byte(msg))
 			return
 		}
+		w.WriteHeader(http.StatusOK) //200
 		w.Write(serial)
 	}
 

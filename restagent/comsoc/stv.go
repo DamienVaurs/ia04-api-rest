@@ -52,6 +52,7 @@ func STV_SWF(p Profile) (Count, error) {
 				miniAlt = alt
 			}
 		}
+		//TODO : appliquer tie-break ici aussi?
 		//On a le plus mauvais candidat, on le vire des votes
 		for indP, votant := range copyP {
 			for i, alt := range votant {

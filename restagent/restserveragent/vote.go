@@ -100,7 +100,8 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	// décodage de la requête
 	req, err := rsa.decodeVoteRequest(r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		//TODO : bérifier si c'est bien le bon code d'erreur
+		w.WriteHeader(http.StatusInternalServerError) //500
 		fmt.Fprint(w, err.Error())
 		return
 	}
@@ -111,32 +112,33 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err.Error() {
 		case "notexist":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /vote : ballot %s does not exist", req.BallotId)
 			w.Write([]byte(msg))
 			return
 		case "alreadyvoted":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusForbidden) //403
 			msg := fmt.Sprintf("error /vote : agent %s has already voted for ballot %s", req.AgentId, req.BallotId)
 			w.Write([]byte(msg))
 			return
 		case "notallowed":
-			w.WriteHeader(http.StatusBadRequest)
+			//TODO : vérifier si c'est bien le bon code d'erreur
+			w.WriteHeader(http.StatusUnauthorized) //401
 			msg := fmt.Sprintf("error /vote : agent %s is not allowed to vote for ballot %s", req.AgentId, req.BallotId)
 			w.Write([]byte(msg))
 			return
 		case "alreadyfinished":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusServiceUnavailable) //503
 			msg := fmt.Sprintf("error /vote : ballot %s is already finished : %s", req.BallotId, rsa.ballotsList[req.BallotId].Deadline.String())
 			w.Write([]byte(msg))
 			return
 		case "wrongalts":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /vote : alternatives provided for ballot %s are not correct", req.BallotId)
 			w.Write([]byte(msg))
 			return
 		case "wrongthreshold":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /vote : threshold %d provided for ballot %s is not correct", req.Options, req.BallotId)
 			w.Write([]byte(msg))
 			return
@@ -148,7 +150,7 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	if rsa.ballotsList[req.BallotId].Rule == restagent.Approval {
 		_, found := rsa.ballotsList[req.BallotId].Thresholds[req.AgentId]
 		if found {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /vote : agent %s has already provided a threshold for ballot %s", req.AgentId, req.BallotId)
 			w.Write([]byte(msg))
 			return
@@ -167,5 +169,7 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK) //200
+	msg := "/vote : vote registered"
+	w.Write([]byte(msg))
 }
