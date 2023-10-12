@@ -26,7 +26,15 @@ func NewBallot(ballotId string, rule string, deadline string, voterIds []string,
 	}
 	l := make([]string, len(voterIds))
 	t := make(map[string]int)
-	return Ballot{ballotId, rule, date, voterIds, alts, tieBreak, l, t}, nil
+	return Ballot{
+		BallotId:   ballotId,
+		Rule:       rule,
+		Deadline:   date,
+		VoterIds:   voterIds,
+		Alts:       alts,
+		TieBreak:   tieBreak,
+		HaveVoted:  l,
+		Thresholds: t}, nil
 }
 
 type RequestNewBallot struct {
