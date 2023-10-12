@@ -26,6 +26,7 @@ func (*RestServerAgent) decodeResultRequest(r *http.Request) (req restagent.Requ
 	return
 }
 
+// Vérifie la cohérence de la requête
 func checkResultRequest(ballotsList map[string]restagent.Ballot, req restagent.RequestResult) (err error) {
 	//Vérifie que le ballot existe
 	_, found := ballotsList[req.BallotId]
@@ -36,9 +37,28 @@ func checkResultRequest(ballotsList map[string]restagent.Ballot, req restagent.R
 	if ballotsList[req.BallotId].Deadline.After(time.Now()) {
 		return fmt.Errorf("notfinished")
 	}
+
+	//Vérifie la cohérence des thresholds (déjà vérifiée à la réception de la requête)
+	//Remarque : on gagne peut-être en sécurité mais on perd en performance
+	if ballotsList[req.BallotId].Rule == "approval" {
+		var nbVotant int
+		for ; ballotsList[req.BallotId].HaveVoted[nbVotant] != ""; nbVotant++ {
+		}
+		fmt.Println("nbVotant : ", nbVotant)
+
+		if len(ballotsList[req.BallotId].Thresholds) != len(ballotsList[req.BallotId].HaveVoted) {
+			return fmt.Errorf("thresholdnumber")
+		}
+		for _, t := range ballotsList[req.BallotId].Thresholds {
+			if t < 0 || t > ballotsList[req.BallotId].Alts {
+				return fmt.Errorf("thresholdvalue")
+			}
+		}
+	}
 	return
 }
 
+// Calcule le résultat du vote en appliquant la méthode de vote souhaitée
 func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request) {
 	rsa.Lock()
 	defer rsa.Unlock()
@@ -67,6 +87,17 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		case "notfinished":
 			w.WriteHeader(http.StatusBadRequest)
 			msg := fmt.Sprintf("error /result : ballot %s is not finished yet. Deadline : %s", req.BallotId, rsa.ballotsList[req.BallotId].Deadline)
+			w.Write([]byte(msg))
+			return
+
+		case "thresholdnumber":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : ballot %s has not the same number of thresholds and voters", req.BallotId)
+			w.Write([]byte(msg))
+			return
+		case "thresholdvalue":
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("error /result : ballot %s is approval and has a threshold value not in [0, %d]", req.BallotId, rsa.ballotsList[req.BallotId].Alts)
 			w.Write([]byte(msg))
 			return
 		}
@@ -119,7 +150,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 
 		//TODO : appliquer le ranking et le tie-break pour Approval
 	} else if rsa.ballotsList[req.BallotId].Rule == "condorcet" {
-		//TODO : appliquer le ranking et le tie-break pour Condorcet
+		//TODO : appliquer le ranking? et le tie-break pour Condorcet
 		scf, err := comsoc.CondorcetWinner(rsa.ballotsMap[req.BallotId])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

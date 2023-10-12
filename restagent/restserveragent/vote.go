@@ -68,7 +68,7 @@ func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVot
 		return fmt.Errorf("notallowed")
 	}
 
-	//Vérifie que la date de fin est n'est pas passée
+	//Vérifie que la date de clôture est n'est pas passée
 	/*if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
 		return fmt.Errorf("alreadyfinished")
 	}*/
@@ -81,7 +81,7 @@ func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVot
 	//Si le ballot est "approval" vérifie qu'un seuil cohérent est bien fourni
 	//Remarque : discuter dans le README de ce choix, car on aurait pu imaginer que pas de treshold => on compte tout le monde
 	if ballotsList[req.BallotId].Rule == "approval" {
-		if req.Options == nil || len(req.Options) != 1 || 0 >= req.Options[0] || req.Options[0] > ballotsList[req.BallotId].Alts {
+		if req.Options == nil || len(req.Options) != 1 || req.Options[0] < 0 || req.Options[0] > ballotsList[req.BallotId].Alts {
 			//TODO : Vérifier si Threshold commence à 0 ou à 1 pour valider ce test
 			return fmt.Errorf("wrongthreshold")
 		}
@@ -140,17 +140,7 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 			msg := fmt.Sprintf("error /vote : threshold %d provided for ballot %s is not correct", req.Options, req.BallotId)
 			w.Write([]byte(msg))
 			return
-		}
-	}
 
-	//Enregistre le vote pour le ballot
-	rsa.ballotsMap[req.BallotId] = append(rsa.ballotsMap[req.BallotId], req.Prefs)
-
-	//Enregistre que l'agent a voté
-	for i := 0; i < len(rsa.ballotsList[req.BallotId].HaveVoted); i++ {
-		if rsa.ballotsList[req.BallotId].HaveVoted[i] == "" {
-			rsa.ballotsList[req.BallotId].HaveVoted[i] = req.AgentId
-			break
 		}
 	}
 
@@ -164,6 +154,17 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		rsa.ballotsList[req.BallotId].Thresholds[req.AgentId] = req.Options[0]
+	}
+
+	//Enregistre le vote pour le ballot
+	rsa.ballotsMap[req.BallotId] = append(rsa.ballotsMap[req.BallotId], req.Prefs)
+
+	//Enregistre que l'agent a voté
+	for i := 0; i < len(rsa.ballotsList[req.BallotId].HaveVoted); i++ {
+		if rsa.ballotsList[req.BallotId].HaveVoted[i] == "" {
+			rsa.ballotsList[req.BallotId].HaveVoted[i] = req.AgentId
+			break
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
