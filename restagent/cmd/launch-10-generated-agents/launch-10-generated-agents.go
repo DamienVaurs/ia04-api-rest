@@ -6,10 +6,8 @@ import (
 )
 
 /**
-* Cette commande lance un serveur et une flotte de 10 agents votants.
-* Leurs préférences sont générées aléatoirement.
-* On a essaye de lancer suffisament de cas différents pour tester
-* l'ensemble de l'application
+* Cette commande lance un serveur et une flotte de 10 agents votants pour 6 scrutins (1 par méthode de vote).
+* Leurs préférences (et leur seuil) sont générées aléatoirement.
 **/
 
 func main() {

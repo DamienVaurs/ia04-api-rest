@@ -1,6 +1,7 @@
 package instances
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -52,6 +53,8 @@ func LaunchAgents(nbBallot int, nbVotant int, nbAlts int, generateAgentsFunc fun
 	//Démarage des agents clients
 	log.Println("démarrage des clients...")
 	wg := sync.WaitGroup{}
+	fmt.Println("AAAAA : nbBallotAgents : ", len(listBallotAgents)) //TODO: effacer
+	fmt.Println("AAAAA : nbVoteAgents : ", len(listVoteAgents))
 	wg.Add(len(listBallotAgents) + len(listVoteAgents))
 
 	//Lancement des agents scrutins
@@ -85,7 +88,7 @@ func LaunchAgents(nbBallot int, nbVotant int, nbAlts int, generateAgentsFunc fun
 	}
 
 	//Attend la réception de n messages de la part des votants anoncant la fin des votes
-	for i := 0; i < len(listBallotAgents); i++ {
+	for i := 0; i < len(listVoteAgents); i++ {
 		<-channelOut
 	}
 	log.Print("\n\n============================= Réception des résultats =============================\n\n")
