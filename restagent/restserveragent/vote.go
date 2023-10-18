@@ -122,7 +122,6 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(msg))
 			return
 		case "notallowed":
-			//TODO : vérifier si c'est bien le bon code d'erreur
 			w.WriteHeader(http.StatusUnauthorized) //401
 			msg := fmt.Sprintf("error /vote : agent %s is not allowed to vote for ballot %s", req.AgentId, req.BallotId)
 			w.Write([]byte(msg))

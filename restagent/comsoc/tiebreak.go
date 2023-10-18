@@ -115,6 +115,7 @@ func SCFFactory(scf func(p Profile) ([]Alternative, error), tieBreaker func([]Al
 	}
 }
 
+// Remarque : obligé de créer une fonction SWF avec Tie-break particulière pour approval car il faut prendre en compte le seuil
 func MakeApprovalRankingWithTieBreak(p Profile, threshold []int, tieBreaker func([]Alternative) (Alternative, error)) ([]Alternative, error) {
 	count, err := ApprovalSWF(p, threshold)
 	if err != nil {
@@ -175,4 +176,81 @@ func MakeApprovalRankingWithTieBreak(p Profile, threshold []int, tieBreaker func
 	}
 	return res, nil
 
+}
+
+// Remarque : obligé de créer une fonction SWF avec Tie-break particulière pour STV car le départage est différent. On utilise le Tie-Break au sein même de l'algorithme
+// TODO : vérifier que ça marche
+func STV_SWF_TieBreak(p Profile, tieBreak []Alternative) (Count, error) {
+	ok := checkProfile(p)
+	if ok != nil {
+		return nil, ok
+	}
+	copyP := make(Profile, len(p)) //On copie le profil pour pouvoir faire des suppressions sans affecter l'original
+	for i, votant := range p {
+		copyP[i] = make([]Alternative, len(votant))
+		copy(copyP[i], votant)
+	}
+
+	tieBreakMap := make(map[Alternative]int, len(tieBreak))
+	for i, alt := range tieBreak {
+		tieBreakMap[alt] = i
+	}
+
+	resMap := make(Count, len(p[0]))
+	//on initialise le map à 0
+	for _, alt := range copyP[0] {
+		resMap[alt] = 0
+	}
+
+	for nbToursRestants := len(copyP[0]) - 1; nbToursRestants > 0; nbToursRestants-- {
+		//On fait le tour on compte les voix
+		//On élimine le plus mauvais candidat
+
+		comptMap := make(Count, len(copyP[0]))
+		for _, alt := range copyP[0] {
+			comptMap[alt] = 0
+		}
+		for _, votant := range copyP {
+			_, ok := comptMap[votant[0]]
+			if ok {
+				comptMap[votant[0]]++
+			} else {
+				comptMap[votant[0]] = 1
+			}
+		}
+		//On a les scores de tous pour ce tour
+		var miniCount int = len(copyP) + 1
+		miniAlts := make([]Alternative, 0)
+		for alt, count := range comptMap {
+			if count < miniCount {
+				miniCount = count
+				miniAlts = append(miniAlts, alt)
+			}
+		}
+		//On a les plus mauvais candidats, on en vire un des votes selon le Tie-break fourni
+		var miniAlt Alternative
+		miniValInTieBreak := len(tieBreak) + 1
+		for _, alt := range miniAlts {
+			if tieBreakMap[alt] < miniValInTieBreak {
+				miniValInTieBreak = tieBreakMap[alt]
+				miniAlt = alt
+			}
+		}
+		//On a désigné le candidat dont il faut se débarasser
+		for indP, votant := range copyP {
+			for i, alt := range votant {
+				if alt == miniAlt {
+					votant[i] = votant[len(votant)-1]
+				}
+			}
+			copyP[indP] = votant[:len(votant)-1]
+		}
+		//on incrémente chaque candidat passant au tour suivant
+		for _, alt := range copyP[0] {
+			if alt != miniAlt {
+				resMap[alt]++
+			}
+		}
+	}
+	return resMap, nil
 }

@@ -44,7 +44,7 @@ func checkResultRequest(ballotsList map[string]restagent.Ballot, req restagent.R
 		var nbVotant int
 		for ; nbVotant < len(ballotsList[req.BallotId].HaveVoted) && ballotsList[req.BallotId].HaveVoted[nbVotant] != ""; nbVotant++ {
 		}
-		fmt.Println("nbVotant : ", nbVotant)
+		//fmt.Println("nbVotant : ", nbVotant)
 
 		if len(ballotsList[req.BallotId].Thresholds) != nbVotant {
 			return fmt.Errorf("thresholdnumber")
@@ -108,7 +108,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 	//Si aucun vote n'a été soumis, on applique simplement le tie-break
 	if len(rsa.ballotsMap[req.BallotId]) == 0 {
 		//Remarque : on décide de retourner un résultat, mais on aurait pu retourner une erreur
-		//Remarque 2 : avec ce choix, Condorcet retournera un classement (qui se tient), ce qui n'est pas habituel
+		//Remarque 2 : avec ce choix, Condorcet retournera un classement (qui se tient), ce qui n'est pas habituel //TODO voir si on garde
 		resp.Winner = rsa.ballotsList[req.BallotId].TieBreak[0]
 		resp.Ranking = rsa.ballotsList[req.BallotId].TieBreak
 
@@ -125,7 +125,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 	}
 
 	if rsa.ballotsList[req.BallotId].Rule == restagent.Approval {
-		//Cas particulier de l'approbation, car demande un paramètre supplémentaire
+		//Cas particulier de l'approbation, car demande un paramètre supplémentaire (le seuil)
 
 		//Transforme le map Threshold en list
 		thresholds := make([]int, 0)
@@ -161,9 +161,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 
 	} else if rsa.ballotsList[req.BallotId].Rule == restagent.Condorcet {
 		//Cas particulier de Condorcet, car le calcule de SWF n'est pas possible
-		//TODO : appliquer le ranking? et le tie-break pour Condorcet
-		//TODO : demander au prof si le tie-break est utilisé pour départager durant le calcul (pareil pour Copeland) ou si il n'est utiliser que pour départager au sein du SWF.
-		// TODO suite : si pas utiliser durant le calcul, alors tie-break n'a pas de sens pour Condorcet
+		//Remarque : on n'utilise pas le tie-break pour Condorcet. On retourne soit un gagnant, soit aucun
 		scf, err := comsoc.CondorcetWinner(rsa.ballotsMap[req.BallotId])
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError) //500
@@ -189,11 +187,10 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		case restagent.Borda:
 			swfVote = comsoc.BordaSWF
 		case restagent.Copeland:
+			//TODO : vérifier que ok pour Copeland
 			swfVote = comsoc.CopelandSWF
 		case restagent.Majority:
 			swfVote = comsoc.MajoritySWF
-		case restagent.STV:
-			swfVote = comsoc.STV_SWF
 		default:
 			w.WriteHeader(http.StatusBadRequest) //400
 			msg := fmt.Sprintf("error /result : type %s is not authorized for ballot %s", rsa.ballotsList[req.BallotId].Rule, req.BallotId)
