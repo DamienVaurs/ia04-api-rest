@@ -180,7 +180,7 @@ func MakeApprovalRankingWithTieBreak(p Profile, threshold []int, tieBreaker func
 
 // Remarque : obligé de créer une fonction SWF avec Tie-break particulière pour STV car le départage est différent. On utilise le Tie-Break au sein même de l'algorithme
 // TODO : vérifier que ça marche
-func STV_SWF_TieBreak(p Profile, tieBreak []Alternative) (Count, error) {
+func STV_SWF_TieBreak(p Profile, tieBreak []Alternative) ([]Alternative, error) {
 	ok := checkProfile(p)
 	if ok != nil {
 		return nil, ok
@@ -191,9 +191,10 @@ func STV_SWF_TieBreak(p Profile, tieBreak []Alternative) (Count, error) {
 		copy(copyP[i], votant)
 	}
 
+	//Map pour associer chaque valeur à sa position dans le tie-break
 	tieBreakMap := make(map[Alternative]int, len(tieBreak))
 	for i, alt := range tieBreak {
-		tieBreakMap[alt] = i
+		tieBreakMap[alt] = len(tieBreak) - i - 1
 	}
 
 	resMap := make(Count, len(p[0]))
@@ -224,6 +225,8 @@ func STV_SWF_TieBreak(p Profile, tieBreak []Alternative) (Count, error) {
 		for alt, count := range comptMap {
 			if count < miniCount {
 				miniCount = count
+				miniAlts = []Alternative{alt}
+			} else if count == miniCount {
 				miniAlts = append(miniAlts, alt)
 			}
 		}
@@ -252,5 +255,10 @@ func STV_SWF_TieBreak(p Profile, tieBreak []Alternative) (Count, error) {
 			}
 		}
 	}
-	return resMap, nil
+	//on crée un slice d'alternatives rangée grâces aux valeurs du Map
+	res := make([]Alternative, len(resMap))
+	for alt, score := range resMap {
+		res[len(resMap)-1-score] = alt
+	}
+	return res, nil
 }

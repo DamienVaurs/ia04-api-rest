@@ -1,7 +1,6 @@
 package instances
 
 import (
-	"fmt"
 	"log"
 	"sync"
 
@@ -52,9 +51,10 @@ func LaunchAgents(nbBallot int, nbVotant int, nbAlts int, generateAgentsFunc fun
 
 	//Démarage des agents clients
 	log.Println("démarrage des clients...")
+
+	log.Print("\n\n============================= Lancement des Agents et Création des scrutins =============================\n\n")
+
 	wg := sync.WaitGroup{}
-	fmt.Println("AAAAA : nbBallotAgents : ", len(listBallotAgents)) //TODO: effacer
-	fmt.Println("AAAAA : nbVoteAgents : ", len(listVoteAgents))
 	wg.Add(len(listBallotAgents) + len(listVoteAgents))
 
 	//Lancement des agents scrutins
@@ -73,7 +73,6 @@ func LaunchAgents(nbBallot int, nbVotant int, nbAlts int, generateAgentsFunc fun
 		}(agt)
 	}
 
-	log.Print("\n\n============================= Création des scrutins =============================\n\n")
 	listBallots := make([]string, len(listBallotAgents))
 	//Attend la réception des len(listBallotAgents) scrutins
 	for i := 0; i < len(listBallotAgents); i++ {

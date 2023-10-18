@@ -1,6 +1,8 @@
 package comsoc
 
-import "errors"
+import (
+	"errors"
+)
 
 /*
 * Règle de Copeland
@@ -12,13 +14,11 @@ import "errors"
 * 0 sinon
 * Le candidat élu est celui qui a le plus haut score de Copeland
  */
-// A TESTER
 func winCopelandDuel(p Profile, alt1 Alternative, alt2 Alternative) (int, error) {
 	ok := checkProfile(p)
 	if ok != nil {
 		return -2, errors.New("profil non valide")
 	}
-
 	var i int = 0
 	var nbWin = 0
 	for _, votant := range p {

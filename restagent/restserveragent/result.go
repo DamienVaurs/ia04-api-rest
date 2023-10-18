@@ -183,6 +183,29 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		w.WriteHeader(http.StatusOK) //200
 		w.Write(serial)
 		return
+	} else if rsa.ballotsList[req.BallotId].Rule == restagent.STV {
+		//Cas particulier de STV, car le tie-break ne s'applique pas de la même manière
+		swf, err := comsoc.STV_SWF_TieBreak(rsa.ballotsMap[req.BallotId], rsa.ballotsList[req.BallotId].TieBreak)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) //500
+			msg := fmt.Sprintf("error /result : can't process SWF for ballot %s of type %s. "+err.Error(), req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+			w.Write([]byte(msg))
+			return
+		}
+		resp.Winner = swf[0]
+		resp.Ranking = swf
+		serial, err := json.Marshal(resp)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError) //500
+			msg := fmt.Sprintf("error /result : can't serialize response for ballot %s of type %s", req.BallotId, rsa.ballotsList[req.BallotId].Rule)
+			w.Write([]byte(msg))
+			return
+		}
+		w.WriteHeader(http.StatusOK) //200
+		w.Write(serial)
+		return
+
 	} else {
 		var swfVote func(comsoc.Profile) (comsoc.Count, error)
 		switch rsa.ballotsList[req.BallotId].Rule {
