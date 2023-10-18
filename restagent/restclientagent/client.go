@@ -64,6 +64,6 @@ func (rca *RestClientAgent) Start() {
 	if err != nil {
 		log.Printf(rca.id, "error: ", err.Error()) //Remarque : on ne fait pas appel à log.Fatal car on veut que l'agent continue de fonctionner pour réaliser ses tâches
 	} else {
-		log.Printf("[%s] : resultat recu pour le scrutin %s = %d\n", rca.id, createdBallot, res)
+		log.Printf("[%s] : resultat recu pour le scrutin %s de type %s = %d\n", rca.id, createdBallot, rca.reqNewBallot.Rule, res)
 	}
 }
