@@ -25,12 +25,12 @@ func NewRestClientAgent(id string, url string, reqNewBallot restagent.RequestNew
 
 // Méthode principale de l'Agent
 func (rca *RestClientAgent) Start() {
-	log.Printf("démarrage de %s", rca.id)
+	log.Printf("démarrage de %s...", rca.id)
 
 	//Etape 1: Création du scrutin
 	createdBallot, err := rca.doRequestNewBallot(rca.reqNewBallot)
 	if err != nil {
-		log.Fatal(rca.id, " error: ", err.Error())
+		log.Printf(rca.id, " error: ", err.Error()) //Remarque : on ne fait pas appel à log.Fatal car on veut que l'agent continue de fonctionner pour réaliser ses tâches
 	} else {
 		log.Printf("/new_Ballot par [%s] créé avec succes : %s\n", rca.id, createdBallot.BallotId)
 	}
@@ -47,7 +47,7 @@ func (rca *RestClientAgent) Start() {
 		rca.reqVote.BallotId = ballot //Met l'Id du scrutin dans la requête
 		err := rca.doRequestVote(rca.reqVote)
 		if err != nil {
-			log.Fatal(rca.id, " error: ", err.Error())
+			log.Printf(rca.id, " error: ", err.Error()) //Remarque : on ne fait pas appel à log.Fatal car on veut que l'agent continue de fonctionner pour réaliser ses tâches
 		} else {
 			log.Printf("/vote par [%s] envoyé avec succes : %d\n", rca.id, rca.reqVote.Prefs)
 		}
@@ -62,7 +62,7 @@ func (rca *RestClientAgent) Start() {
 	//Etape 3: Récupération du résultat de chaque scrutin
 	res, err := rca.doRequestResults(createdBallot.BallotId)
 	if err != nil {
-		log.Fatal(rca.id, "error: ", err.Error())
+		log.Printf(rca.id, "error: ", err.Error()) //Remarque : on ne fait pas appel à log.Fatal car on veut que l'agent continue de fonctionner pour réaliser ses tâches
 	} else {
 		log.Printf("[%s] : resultat recu pour le scrutin %s = %d\n", rca.id, createdBallot, res)
 	}

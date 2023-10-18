@@ -53,16 +53,19 @@ func checkBallot(req restagent.RequestNewBallot) (err error) {
 	}
 
 	//Vérifie que le tie-break est cohérent avec les alternatives
-	if req.TieBreak == nil || len(req.TieBreak) != req.Alts {
-		return fmt.Errorf("tiebreak")
-	} else {
-		//Vérifie qu'il n'y a pas de doublon dans le tie-break ni de valeur abérante
-		list := make([]comsoc.Alternative, len(req.TieBreak))
-		copy(list, req.TieBreak)
-		sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
-		for i := 0; i < len(req.TieBreak)-1; i++ {
-			if list[i]+1 != list[i+1] {
-				return fmt.Errorf("tiebreak")
+	//Remarque : comme le Tie-break ne sert à rien pour Condorcet, on ne vérifie pas qu'il est cohérent
+	if req.Rule != restagent.Condorcet {
+		if req.TieBreak == nil || len(req.TieBreak) != req.Alts {
+			return fmt.Errorf("tiebreak")
+		} else {
+			//Vérifie qu'il n'y a pas de doublon dans le tie-break ni de valeur abérante
+			list := make([]comsoc.Alternative, len(req.TieBreak))
+			copy(list, req.TieBreak)
+			sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
+			for i := 0; i < len(req.TieBreak)-1; i++ {
+				if list[i]+1 != list[i+1] {
+					return fmt.Errorf("tiebreak")
+				}
 			}
 		}
 	}
@@ -136,5 +139,5 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 	}
 	w.WriteHeader(http.StatusCreated) //201
 	w.Write(serial)
-	fmt.Println("Liste ballots : ", rsa.ballotsList)
+	return
 }

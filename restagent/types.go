@@ -39,34 +39,34 @@ func NewBallot(ballotId string, rule string, deadline string, voterIds []string,
 }
 
 type RequestNewBallot struct {
-	Rule     string               `json:"rule"`
-	Deadline string               `json:"deadline"`
-	VoterIds []string             `json:"voter-ids"`
-	Alts     int                  `json:"#alts"`
-	TieBreak []comsoc.Alternative `json:"tie-break"`
+	Rule     string               `json:"rule"`      //Méthode de vote
+	Deadline string               `json:"deadline"`  //Date limite de vote
+	VoterIds []string             `json:"voter-ids"` //Liste des agents pouvant voter
+	Alts     int                  `json:"#alts"`     //Alternatives de 1 à Alts
+	TieBreak []comsoc.Alternative `json:"tie-break"` //Ordre de préférence des alternatives en cas d'égalité
 }
 
 type ResponseNewBallot struct {
 	//Objet renvoyé si code 201
-	BallotId string `json:"ballot-id"`
+	BallotId string `json:"ballot-id"` //Id du scrutin créé
 }
 
 // Type utilisé pour la requête /vote
 type RequestVote struct {
-	AgentId  string               `json:"agent-id"`
-	BallotId string               `json:"ballot-id"`
-	Prefs    []comsoc.Alternative `json:"prefs"`
-	Options  []int                `json:"options"` //Utilisé pour le seuil du vote par approbation
+	AgentId  string               `json:"agent-id"`  //Id de l'agent votant
+	BallotId string               `json:"ballot-id"` //Id du scrutin auquel on vote
+	Prefs    []comsoc.Alternative `json:"prefs"`     //Préférences ordonnées de l'agent votant
+	Options  []int                `json:"options"`   //Utilisé pour le seuil du vote par approbation
 }
 
 // Types utilisés pour la requête /result
 
 type RequestResult struct {
-	BallotId string `json:"ballot-id"`
+	BallotId string `json:"ballot-id"` //id du scrutin dont on veut le résultat
 }
 
 type ResponseResult struct {
 	//Objet renvoyé si code 200
-	Winner  comsoc.Alternative   `json:"winner"`
-	Ranking []comsoc.Alternative `json:"ranking,omitempty"` //Champ facultatif
+	Winner  comsoc.Alternative   `json:"winner"`            //Alternative gagnante
+	Ranking []comsoc.Alternative `json:"ranking,omitempty"` //Classement des alternatives (Champ facultatif)
 }

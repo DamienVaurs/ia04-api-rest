@@ -14,7 +14,7 @@ import (
 * Cette commande lance un agent votant qui réalise les commandes suivantes :
 * - POST /new_ballot : crée un scrutin
 * - POST /vote : vote pour le scrutin
-* - GET /result : récupère le résultat du scrutin
+* - POST /result : récupère le résultat du scrutin
 * - Affiche le résultat.
 * Cela n'a pas grand intérêt en soit si ce n'est de tester le fonctionnement de l'API REST.
 * Pour un exemple plus intéressant, voir la commande launch-all-agent qui lance une flotte d'agents.
@@ -36,7 +36,7 @@ func main() {
 	}
 
 	//Création de la requête pour voter
-	intPref := rand.Perm(nbAlts) //TODO mettre niveau sup et vérifier que ça fait crée bien des permutations aléatoires de nombres dans [1, nbAlts]
+	intPref := rand.Perm(nbAlts)
 	altPref := make([]comsoc.Alternative, nbAlts)
 	for i := 0; i < nbAlts; i++ {
 		//conversion en []Alternative
