@@ -59,7 +59,7 @@ func CondorcetWinner(p Profile) (bestAlts []Alternative, err error) {
 				}
 			}
 		}
-		if nbWin == n-1 {
+		if nbWin == m-1 {
 			return []Alternative{p[0][i]}, nil
 		}
 	}

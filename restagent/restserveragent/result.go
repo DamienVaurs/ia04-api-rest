@@ -169,7 +169,9 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 			w.Write([]byte(msg))
 			return
 		}
-		resp.Winner = scf[0]
+		if len(scf) != 0 {
+			resp.Winner = scf[0]
+		}
 
 		serial, err := json.Marshal(resp)
 		if err != nil {
