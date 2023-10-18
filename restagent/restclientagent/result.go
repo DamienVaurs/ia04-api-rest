@@ -35,14 +35,14 @@ func (rca *RestClientAgent) doRequestResults(ballotId string) (res restagent.Res
 	// envoi de la requête
 	data, err := json.Marshal(req)
 	if err != nil {
-		return res, fmt.Errorf("error by %s in /request while marshalling request: %s", rca.id, err.Error())
+		return res, fmt.Errorf("/result. error by %s in /result while marshalling request: %s", rca.id, err.Error())
 	}
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 
-	// traitement de la réponse
+	// traitement
 	if err != nil {
-		return res, fmt.Errorf("error by %s in /request while sending request: %s", rca.id, err.Error())
+		return res, fmt.Errorf("/result.error by %s in /result while sending request: %s", rca.id, err.Error())
 	}
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("[%d] %s", resp.StatusCode, resp.Status)
@@ -51,7 +51,7 @@ func (rca *RestClientAgent) doRequestResults(ballotId string) (res restagent.Res
 
 	res, err = rca.treatResponseResults(resp)
 	if err != nil {
-		return res, fmt.Errorf("error by %s in /request while treating response: %s", rca.id, err.Error())
+		return res, fmt.Errorf("/result.error by %s in /result while treating response: %s", rca.id, err.Error())
 	}
 
 	return

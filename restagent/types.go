@@ -18,6 +18,7 @@ type Ballot struct {
 	Thresholds map[string]int       //Contient les seuils de chaque votant (pour vote par approbation)
 }
 
+// Constructeur d'un Ballot
 func NewBallot(ballotId string, rule string, deadline string, voterIds []string, alts int, tieBreak []comsoc.Alternative) (Ballot, error) {
 	//Vérifie que le format de date est bon
 	date, err := time.Parse(time.RFC3339, deadline)
@@ -50,7 +51,7 @@ type ResponseNewBallot struct {
 	BallotId string `json:"ballot-id"`
 }
 
-// Types utilisés pour la requête /vote
+// Type utilisé pour la requête /vote
 type RequestVote struct {
 	AgentId  string               `json:"agent-id"`
 	BallotId string               `json:"ballot-id"`

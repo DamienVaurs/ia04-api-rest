@@ -68,7 +68,8 @@ func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVot
 		return fmt.Errorf("notallowed")
 	}
 
-	//Vérifie que la date de clôture est n'est pas passée
+	//TODO décommenter
+	//Vérifie que la date de clôture n'est pas passée
 	/*if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
 		return fmt.Errorf("alreadyfinished")
 	}*/
