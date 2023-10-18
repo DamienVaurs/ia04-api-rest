@@ -9,5 +9,5 @@ import "gitlab.utc.fr/milairhu/ia04-api-rest/restagent/instances"
 **/
 
 func main() {
-	instances.LaunchAgents(5+4+2+6+8+2, 4, instances.InitChap3Diap34)
+	instances.LaunchAgents(3, 5+4+2+6+8+2, 4, instances.InitChap3Diap34)
 }

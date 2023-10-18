@@ -13,7 +13,7 @@ import (
 // Fonctions qui réalisent l'appel à l'API REST pour voter :
 // http://localhost:8080/vote
 
-func (rca *RestClientAgent) doRequestVote(req restagent.RequestVote) (err error) {
+func (rca *RestClientVoteAgent) doRequestVote(req restagent.RequestVote) (err error) {
 
 	// sérialisation de la requête
 	url := rca.url + endpoints.Vote

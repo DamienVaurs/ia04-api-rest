@@ -23,15 +23,13 @@ import (
 * 2 ordres de préférences : [4, 3, 2, 1]
 *
 **/
-func InitChap3Diap34(url string, n int, nbAlts int, listCin []chan []string, cout chan string) []restclientagent.RestClientAgent {
+func InitChap3Diap34(url string, n int, nbBallot, nbAlts int, listCinVotants []chan []string, listCinBallots []chan []string, cout chan string) ([]restclientagent.RestClientVoteAgent, []restclientagent.RestClientBallotAgent) {
 	listAgentsId := make([]string, n)
 	for i := 0; i < n; i++ {
-		listAgentsId[i] = "ag_" + strconv.Itoa(i+1)
+		listAgentsId[i] = "ag_vote_" + strconv.Itoa(i+1)
 	}
 
-	res := make([]restclientagent.RestClientAgent, n)
-
-	//On crée 3 types de scrutin pour les 3 méthodes de vote
+	//On crée 3 scrutins, pour les 3 méthodes de vote
 	reqNewBallotMaj := restagent.RequestNewBallot{
 		Rule:     restagent.Majority,
 		Deadline: "2018-12-31T23:59:59Z", //TODO : mettre une date cohérente quand on décommentera le code
@@ -56,89 +54,91 @@ func InitChap3Diap34(url string, n int, nbAlts int, listCin []chan []string, cou
 		TieBreak: []comsoc.Alternative{1, 2, 3, 4},
 	}
 
+	voteAgents := make([]restclientagent.RestClientVoteAgent, n)     // Liste des agents votants
+	ballotAgents := make([]restclientagent.RestClientBallotAgent, 3) // Liste des agents tenant un scrutin (un seul ici)
+
+	//Création des scrutins
+	ballotAgents[0] = *restclientagent.NewRestClientBallotAgent("ag_scrut_maj", url, reqNewBallotMaj, listCinBallots[0], cout)
+	ballotAgents[1] = *restclientagent.NewRestClientBallotAgent("ag_scrut_borda", url, reqNewBallotBorda, listCinBallots[1], cout)
+	ballotAgents[2] = *restclientagent.NewRestClientBallotAgent("ag_scrut_condorcet", url, reqNewBallotCondorcet, listCinBallots[2], cout)
+
 	//5 agents votent pour [1, 2, 3, 4]
 	for i := 0; i < 5; i++ {
-		res[i] = *restclientagent.NewRestClientAgent(listAgentsId[i], url,
-			reqNewBallotMaj,
+		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
 				AgentId:  listAgentsId[i],
 				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
 				Prefs:    []comsoc.Alternative{1, 2, 3, 4},
 				Options:  nil,
 			},
-			listCin[i],
+			listCinVotants[i],
 			cout)
 	}
 
 	//4 agents votent pour [1, 3, 2, 4]
 	for i := 5; i < 9; i++ {
-		res[i] = *restclientagent.NewRestClientAgent(listAgentsId[i], url,
-			reqNewBallotMaj,
+		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
 				AgentId:  listAgentsId[i],
 				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
 				Prefs:    []comsoc.Alternative{1, 3, 2, 4},
 				Options:  nil,
 			},
-			listCin[i],
+			listCinVotants[i],
 			cout)
 	}
 
 	//2 agents votent pour [4, 2, 1, 3]
 	for i := 9; i < 11; i++ {
-		res[i] = *restclientagent.NewRestClientAgent(listAgentsId[i], url,
-			reqNewBallotBorda,
+		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
 				AgentId:  listAgentsId[i],
 				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
 				Prefs:    []comsoc.Alternative{4, 2, 1, 3},
 				Options:  nil,
 			},
-			listCin[i],
+			listCinVotants[i],
 			cout)
 	}
 
 	//6 agents votent pour [4, 2, 3, 1]
 	for i := 11; i < 17; i++ {
-		res[i] = *restclientagent.NewRestClientAgent(listAgentsId[i], url,
-			reqNewBallotBorda,
+		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
 				AgentId:  listAgentsId[i],
 				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
 				Prefs:    []comsoc.Alternative{4, 2, 3, 1},
 				Options:  nil,
 			},
-			listCin[i],
+			listCinVotants[i],
 			cout)
 	}
 
 	//8 agents votent pour [3, 2, 1, 4]
 	for i := 17; i < 25; i++ {
-		res[i] = *restclientagent.NewRestClientAgent(listAgentsId[i], url,
-			reqNewBallotCondorcet,
+		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
 				AgentId:  listAgentsId[i],
 				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
 				Prefs:    []comsoc.Alternative{3, 2, 1, 4},
 				Options:  nil,
 			},
-			listCin[i],
+			listCinVotants[i],
 			cout)
 	}
 
 	//2 agents votent pour [4, 3, 2, 1]
 	for i := 25; i < 27; i++ {
-		res[i] = *restclientagent.NewRestClientAgent(listAgentsId[i], url,
-			reqNewBallotCondorcet,
+		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
 				AgentId:  listAgentsId[i],
 				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
 				Prefs:    []comsoc.Alternative{4, 3, 2, 1},
 				Options:  nil,
 			},
-			listCin[i],
+			listCinVotants[i],
 			cout)
 	}
 
-	return res
+	return voteAgents, ballotAgents
 }

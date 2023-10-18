@@ -1,6 +1,9 @@
 package main
 
-import "gitlab.utc.fr/milairhu/ia04-api-rest/restagent/instances"
+import (
+	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
+	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/instances"
+)
 
 /**
 * Cette commande lance un serveur et une flotte de 10 agents votants.
@@ -10,5 +13,5 @@ import "gitlab.utc.fr/milairhu/ia04-api-rest/restagent/instances"
 **/
 
 func main() {
-	instances.LaunchAgents(10, 5, instances.Init10VotingAgents)
+	instances.LaunchAgents(len(restagent.Rules), 10, 5, instances.Init10VotingAgents)
 }

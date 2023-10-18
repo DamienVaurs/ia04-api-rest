@@ -13,7 +13,7 @@ import (
 // Fonctions qui réalisent l'appel à l'API REST pour obtenir le résultat du vote :
 // http://localhost:8080/result
 
-func (rca *RestClientAgent) treatResponseResults(r *http.Response) (resp restagent.ResponseResult, err error) {
+func (rca *RestClientBallotAgent) treatResponseResults(r *http.Response) (resp restagent.ResponseResult, err error) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(r.Body)
 
@@ -22,7 +22,7 @@ func (rca *RestClientAgent) treatResponseResults(r *http.Response) (resp restage
 	return
 }
 
-func (rca *RestClientAgent) doRequestResults(ballotId string) (res restagent.ResponseResult, err error) {
+func (rca *RestClientBallotAgent) doRequestResults(ballotId string) (res restagent.ResponseResult, err error) {
 
 	// sérialisation de la requête
 	url := rca.url + endpoints.Results
