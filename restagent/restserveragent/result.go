@@ -105,12 +105,15 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 
 	resp := restagent.ResponseResult{}
 
-	//Si aucun vote n'a été soumis, on applique simplement le tie-break
+	//Si aucun vote n'a été soumis, on applique simplement le tie-break (sauf pour Condorcet où pas de Tie-Break pris en compte, on retourne 0)
 	if len(rsa.ballotsMap[req.BallotId]) == 0 {
 		//Remarque : on décide de retourner un résultat, mais on aurait pu retourner une erreur
-		//Remarque 2 : avec ce choix, Condorcet retournera un classement (qui se tient), ce qui n'est pas habituel //TODO voir si on garde
-		resp.Winner = rsa.ballotsList[req.BallotId].TieBreak[0]
-		resp.Ranking = rsa.ballotsList[req.BallotId].TieBreak
+		if rsa.ballotsList[req.BallotId].Rule == restagent.Condorcet {
+			resp.Winner = 0
+		} else {
+			resp.Winner = rsa.ballotsList[req.BallotId].TieBreak[0]
+			resp.Ranking = rsa.ballotsList[req.BallotId].TieBreak
+		}
 
 		serial, err := json.Marshal(resp)
 		if err != nil {
