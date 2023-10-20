@@ -51,10 +51,9 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	//Agent 1
 	voteAgents[0] = *restclientagent.NewRestClientVoteAgent(listAgentsId[0], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[0],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[0],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[0],
 		cout)
@@ -63,20 +62,18 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	voteAgents[1] = *restclientagent.NewRestClientVoteAgent(
 		listAgentsId[1], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[1],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[1],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		}, listCinVotants[1], cout,
 	)
 
 	//Agent 3
 	voteAgents[2] = *restclientagent.NewRestClientVoteAgent(listAgentsId[2], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[2],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[2],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[2],
 		cout)
@@ -84,10 +81,9 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	// Agent 4
 	voteAgents[3] = *restclientagent.NewRestClientVoteAgent(listAgentsId[3], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[3],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[3],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[3],
 		cout)
@@ -95,10 +91,9 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	// Agent 5
 	voteAgents[4] = *restclientagent.NewRestClientVoteAgent(listAgentsId[4], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[4],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[4],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[4],
 		cout)
@@ -106,10 +101,9 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	// Agent 6
 	voteAgents[5] = *restclientagent.NewRestClientVoteAgent(listAgentsId[5], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[5],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[5],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[5],
 		cout)
@@ -117,10 +111,9 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	//  Agent 7
 	voteAgents[6] = *restclientagent.NewRestClientVoteAgent(listAgentsId[6], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[6],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[6],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[6],
 		cout)
@@ -128,10 +121,9 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	// Agent 8
 	voteAgents[7] = *restclientagent.NewRestClientVoteAgent(listAgentsId[7], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[7],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[7],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[7],
 		cout)
@@ -139,10 +131,9 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	// Agent 9
 	voteAgents[8] = *restclientagent.NewRestClientVoteAgent(listAgentsId[8], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[8],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[8],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[8],
 		cout)
@@ -150,10 +141,9 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 	// Agent 10
 	voteAgents[9] = *restclientagent.NewRestClientVoteAgent(listAgentsId[9], url,
 		restagent.RequestVote{
-			AgentId:  listAgentsId[9],
-			BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-			Prefs:    generatePrefs(nbAlts),
-			Options:  generateThresholds(nbAlts),
+			AgentId: listAgentsId[9],
+			Prefs:   generatePrefs(nbAlts),
+			Options: generateThresholds(nbAlts),
 		},
 		listCinVotants[9],
 		cout)

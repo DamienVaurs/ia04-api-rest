@@ -41,10 +41,9 @@ func InitChap3Diap49(url string, n int, nbBallots int, nbAlts int, listCinVotant
 	for i := 0; i < 5; i++ {
 		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
-				AgentId:  listAgentsId[i],
-				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-				Prefs:    []comsoc.Alternative{1, 2, 3, 4},
-				Options:  nil,
+				AgentId: listAgentsId[i],
+				Prefs:   []comsoc.Alternative{1, 2, 3, 4},
+				Options: nil,
 			},
 			listCinVotants[i],
 			cout)
@@ -54,10 +53,9 @@ func InitChap3Diap49(url string, n int, nbBallots int, nbAlts int, listCinVotant
 	for i := 5; i < 9; i++ {
 		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
-				AgentId:  listAgentsId[i],
-				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-				Prefs:    []comsoc.Alternative{2, 3, 4, 1},
-				Options:  nil,
+				AgentId: listAgentsId[i],
+				Prefs:   []comsoc.Alternative{2, 3, 4, 1},
+				Options: nil,
 			},
 			listCinVotants[i],
 			cout)
@@ -67,10 +65,9 @@ func InitChap3Diap49(url string, n int, nbBallots int, nbAlts int, listCinVotant
 	for i := 9; i < 12; i++ {
 		voteAgents[i] = *restclientagent.NewRestClientVoteAgent(listAgentsId[i], url,
 			restagent.RequestVote{
-				AgentId:  listAgentsId[i],
-				BallotId: "", //Pas besoin de spécifier, l'agent vote pour le scrutin qu'il crée
-				Prefs:    []comsoc.Alternative{4, 3, 1, 2},
-				Options:  nil,
+				AgentId: listAgentsId[i],
+				Prefs:   []comsoc.Alternative{4, 3, 1, 2},
+				Options: nil,
 			},
 			listCinVotants[i],
 			cout)
