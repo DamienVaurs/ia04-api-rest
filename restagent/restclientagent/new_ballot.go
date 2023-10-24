@@ -40,11 +40,11 @@ func (rca *RestClientBallotAgent) doRequestNewBallot(req restagent.RequestNewBal
 	}
 	if resp.StatusCode != http.StatusCreated {
 
-		return res, fmt.Errorf("/newballot. [%d] %s", resp.StatusCode, resp.Status)
+		return res, fmt.Errorf("/new_ballot. [%d] %s", resp.StatusCode, resp.Status)
 	}
 	res, err = rca.treatResponseNewBallot(resp)
 	if err != nil {
-		return res, fmt.Errorf("/newballot. error by %s in /new_ballot while treating response: %s", rca.id, err.Error())
+		return res, fmt.Errorf("/new_ballot. error by %s in /new_ballot while treating response: %s", rca.id, err.Error())
 	}
 
 	return

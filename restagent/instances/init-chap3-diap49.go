@@ -2,6 +2,7 @@ package instances
 
 import (
 	"strconv"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
@@ -26,7 +27,7 @@ func InitChap3Diap49(url string, n int, nbBallots int, nbAlts int, listCinVotant
 	//Création du scrutin
 	reqNewBallot := restagent.RequestNewBallot{
 		Rule:     restagent.STV,
-		Deadline: "2018-12-31T23:59:59Z", //TODO : mettre une date cohérente quand on décommentera le code
+		Deadline: time.Now().Add(5 * time.Second).Format(time.RFC3339),
 		VoterIds: listAgentsId[:],
 		Alts:     nbAlts,
 		TieBreak: []comsoc.Alternative{1, 2, 3, 4},

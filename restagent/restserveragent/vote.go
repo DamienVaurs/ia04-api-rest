@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
@@ -44,7 +45,7 @@ func checkVoteAlts(vote []comsoc.Alternative, expected int) bool {
 	return true
 }
 
-func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVote) (err error) {
+func checkVote(ballotsList map[string]restagent.Ballot, deadline time.Time, req restagent.RequestVote) (err error) {
 	//Vérifie que le ballot existe
 	_, found := ballotsList[req.BallotId]
 	if !found {
@@ -68,11 +69,10 @@ func checkVote(ballotsList map[string]restagent.Ballot, req restagent.RequestVot
 		return fmt.Errorf("notallowed")
 	}
 
-	//TODO décommenter
 	//Vérifie que la date de clôture n'est pas passée
-	/*if rsa.ballotsList[req.BallotId].Deadline.Before(time.Now()) {
+	if deadline.Before(time.Now()) {
 		return fmt.Errorf("alreadyfinished")
-	}*/
+	}
 
 	//Vérifie que les alteratives fournies pour le vote sont correctes
 	if !checkVoteAlts(req.Prefs, ballotsList[req.BallotId].Alts) {
@@ -109,7 +109,7 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Serveur recoit : ", r.URL, req)
 
 	//Vérifie que le vote est correct
-	err = checkVote(rsa.ballotsList, req)
+	err = checkVote(rsa.ballotsList, rsa.ballotsList[req.BallotId].Deadline, req)
 	if err != nil {
 		switch err.Error() {
 		case "notexist":

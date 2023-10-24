@@ -3,6 +3,7 @@ package restclientagent
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 )
@@ -46,6 +47,8 @@ func (rcba *RestClientBallotAgent) Start() {
 	// Etape 3: Attente de la fin des votes de tous les agents, signalé par la goRoutine principale
 	fmt.Printf("[%s] : attente de la fin des votes...\n", rcba.id)
 	<-rcba.cin
+
+	time.Sleep(6 * time.Second)
 
 	// Etape 4: Récupération du résultat de chaque scrutin
 	res, err := rcba.doRequestResults(createdBallot.BallotId)

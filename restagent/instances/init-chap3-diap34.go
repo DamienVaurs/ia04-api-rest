@@ -2,6 +2,7 @@ package instances
 
 import (
 	"strconv"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
@@ -32,7 +33,7 @@ func InitChap3Diap34(url string, n int, nbBallot, nbAlts int, listCinVotants []c
 	//On crée 3 scrutins, pour les 3 méthodes de vote
 	reqNewBallotMaj := restagent.RequestNewBallot{
 		Rule:     restagent.Majority,
-		Deadline: "2018-12-31T23:59:59Z", //TODO : mettre une date cohérente quand on décommentera le code
+		Deadline: time.Now().Add(5 * time.Second).Format(time.RFC3339), //on laisse 5s pour que les votes se clôturent
 		VoterIds: listAgentsId[:],
 		Alts:     nbAlts,
 		TieBreak: []comsoc.Alternative{1, 2, 3, 4},
@@ -40,7 +41,7 @@ func InitChap3Diap34(url string, n int, nbBallot, nbAlts int, listCinVotants []c
 
 	reqNewBallotBorda := restagent.RequestNewBallot{
 		Rule:     restagent.Borda,
-		Deadline: "2018-12-31T23:59:59Z", //TODO : mettre une date cohérente quand on décommentera le code
+		Deadline: time.Now().Add(5 * time.Second).Format(time.RFC3339),
 		VoterIds: listAgentsId[:],
 		Alts:     nbAlts,
 		TieBreak: []comsoc.Alternative{1, 2, 3, 4},
@@ -48,7 +49,7 @@ func InitChap3Diap34(url string, n int, nbBallot, nbAlts int, listCinVotants []c
 
 	reqNewBallotCondorcet := restagent.RequestNewBallot{
 		Rule:     restagent.Condorcet,
-		Deadline: "2018-12-31T23:59:59Z", //TODO : mettre une date cohérente quand on décommentera le code
+		Deadline: time.Now().Add(5 * time.Second).Format(time.RFC3339),
 		VoterIds: listAgentsId[:],
 		Alts:     nbAlts,
 		TieBreak: []comsoc.Alternative{1, 2, 3, 4},

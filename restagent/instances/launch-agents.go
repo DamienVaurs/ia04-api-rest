@@ -91,6 +91,7 @@ func LaunchAgents(nbBallot int, nbVotant int, nbAlts int, generateAgentsFunc fun
 		<-channelOut
 	}
 	log.Print("\n\n============================= Réception des résultats =============================\n\n")
+	log.Print("Attente de la fin des scrutins...\n\n")
 	//Envoie d'un message aux agents scrutins pour lancer le calcul des résultats
 	for _, channelIn := range channelInListBallotAgent {
 		channelIn <- []string{"fin"}

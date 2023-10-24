@@ -3,6 +3,7 @@ package instances
 import (
 	"math/rand"
 	"strconv"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
@@ -38,7 +39,7 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 		ballotAgents[i] = *restclientagent.NewRestClientBallotAgent("ag_scrut_"+rule, url,
 			restagent.RequestNewBallot{
 				Rule:     restagent.Rules[i],
-				Deadline: "2018-12-31T23:59:59Z", //TODO : mettre une date cohérente quand on décommentera le code
+				Deadline: time.Now().Add(5 * time.Second).Format(time.RFC3339),
 				VoterIds: listAgentsId[:],
 				Alts:     nbAlts,
 				TieBreak: []comsoc.Alternative{1, 2, 3, 4, 5},
@@ -46,6 +47,29 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 			listCinBallots[i],
 			cout)
 	}
+	//Scrutin avec une deadline passée
+	ballotAgents[nbBallots-2] = *restclientagent.NewRestClientBallotAgent("ag_scrut_passed_deadline", url,
+		restagent.RequestNewBallot{
+			Rule:     restagent.Majority,
+			Deadline: "2018-12-31T23:59:59Z", //On met une deadline passée pour que les votants ne puisse pas voter pour ce scrutin
+			VoterIds: listAgentsId[:],
+			Alts:     nbAlts,
+			TieBreak: []comsoc.Alternative{1, 2, 3, 4, 5},
+		},
+		listCinBallots[nbBallots-2],
+		cout)
+
+	//Scrutin sans votants autorisés
+	ballotAgents[nbBallots-1] = *restclientagent.NewRestClientBallotAgent("ag_scrut_no_votant", url,
+		restagent.RequestNewBallot{
+			Rule:     restagent.Majority,
+			Deadline: time.Now().Add(5 * time.Second).Format(time.RFC3339),
+			VoterIds: []string{},
+			Alts:     nbAlts,
+			TieBreak: []comsoc.Alternative{1, 2, 3, 4, 5},
+		},
+		listCinBallots[nbBallots-1],
+		cout)
 
 	//Création des votants
 	//Agent 1
