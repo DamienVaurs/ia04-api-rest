@@ -83,7 +83,6 @@ func checkVote(ballotsList map[string]restagent.Ballot, deadline time.Time, req 
 	//Remarque : discuter dans le README de ce choix, car on aurait pu imaginer que pas de treshold => on compte tout le monde
 	if ballotsList[req.BallotId].Rule == "approval" {
 		if req.Options == nil || len(req.Options) != 1 || req.Options[0] < 0 || req.Options[0] > ballotsList[req.BallotId].Alts {
-			//TODO : Vérifier si Threshold commence à 0 ou à 1 pour valider ce test
 			return fmt.Errorf("wrongthreshold")
 		}
 	}
@@ -101,8 +100,7 @@ func (rsa *RestServerAgent) doVote(w http.ResponseWriter, r *http.Request) {
 	// décodage de la requête
 	req, err := rsa.decodeVoteRequest(r)
 	if err != nil {
-		//TODO : bérifier si c'est bien le bon code d'erreur
-		w.WriteHeader(http.StatusInternalServerError) //500
+		w.WriteHeader(http.StatusBadRequest) //400
 		fmt.Fprint(w, err.Error())
 		return
 	}

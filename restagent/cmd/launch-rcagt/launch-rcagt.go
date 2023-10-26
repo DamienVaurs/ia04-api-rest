@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 	"sync"
+	"time"
 
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent"
 	"gitlab.utc.fr/milairhu/ia04-api-rest/restagent/comsoc"
@@ -28,8 +29,8 @@ func main() {
 	//Création de la requête pour créer un nouveau scrutin
 	reqNewBallot := restagent.RequestNewBallot{
 		Rule:     restagent.Majority,
-		Deadline: "2018-12-31T23:59:59Z", //TODO : mettre une date cohérente quand on décommentera le code
-		VoterIds: []string{"ag_vote"},    //un seul votant car on ne lance qu'un client
+		Deadline: time.Now().Add(5 * time.Second).Format(time.RFC3339),
+		VoterIds: []string{"ag_vote"}, //un seul votant car on ne lance qu'un client
 		Alts:     nbAlts,
 		TieBreak: []comsoc.Alternative{1, 2, 3, 4, 5},
 	}

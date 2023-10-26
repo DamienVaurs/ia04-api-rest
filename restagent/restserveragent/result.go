@@ -215,7 +215,6 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		case restagent.Borda:
 			swfVote = comsoc.BordaSWF
 		case restagent.Copeland:
-			//TODO : vérifier que ok pour Copeland
 			swfVote = comsoc.CopelandSWF
 		case restagent.Majority:
 			swfVote = comsoc.MajoritySWF
