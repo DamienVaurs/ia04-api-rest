@@ -22,7 +22,8 @@ func generatePrefs(nbAlts int) []comsoc.Alternative {
 
 func generateThresholds(nbAlts int) []int {
 	//TODO : vérifier la valeur générée
-	return []int{rand.Intn(5)}
+	res := []int{rand.Intn(nbAlts + 1)}
+	return res
 }
 
 func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVotants []chan []string, listCinBallots []chan []string, cout chan string) ([]restclientagent.RestClientVoteAgent, []restclientagent.RestClientBallotAgent) {
