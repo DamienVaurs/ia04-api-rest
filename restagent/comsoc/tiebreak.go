@@ -179,7 +179,6 @@ func MakeApprovalRankingWithTieBreak(p Profile, threshold []int, tieBreaker func
 }
 
 // Remarque : obligé de créer une fonction SWF avec Tie-break particulière pour STV car le départage est différent. On utilise le Tie-Break au sein même de l'algorithme
-// TODO : vérifier que ça marche
 func STV_SWF_TieBreak(p Profile, tieBreak []Alternative) ([]Alternative, error) {
 	ok := checkProfile(p)
 	if ok != nil {
@@ -239,11 +238,15 @@ func STV_SWF_TieBreak(p Profile, tieBreak []Alternative) ([]Alternative, error) 
 				miniAlt = alt
 			}
 		}
-		//On a désigné le candidat dont il faut se débarasser
+		//On a désigné le candidat dont il faut se débarasser, on le supprime de tous les votes
 		for indP, votant := range copyP {
+			var found bool
 			for i, alt := range votant {
 				if alt == miniAlt {
-					votant[i] = votant[len(votant)-1]
+					found = true
+				}
+				if found && i < len(votant)-1 {
+					votant[i] = votant[i+1]
 				}
 			}
 			copyP[indP] = votant[:len(votant)-1]
