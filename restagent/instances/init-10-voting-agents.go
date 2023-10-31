@@ -21,7 +21,6 @@ func generatePrefs(nbAlts int) []comsoc.Alternative {
 }
 
 func generateThresholds(nbAlts int) []int {
-	//TODO : vérifier la valeur générée
 	res := []int{rand.Intn(nbAlts + 1)}
 	return res
 }
@@ -48,6 +47,17 @@ func Init10VotingAgents(url string, n int, nbBallots int, nbAlts int, listCinVot
 			listCinBallots[i],
 			cout)
 	}
+	//Scrutin avec une deadline qui ne termine pas avant fin du programme
+	ballotAgents[nbBallots-3] = *restclientagent.NewRestClientBallotAgent("ag_scrut_not_ended_deadline", url,
+		restagent.RequestNewBallot{
+			Rule:     restagent.Majority,
+			Deadline: time.Now().Add(5 * time.Hour).Format(time.RFC3339), //On met une deadline trop loingtaine pour que le scrutin se termine avant la fin du programme
+			VoterIds: listAgentsId[:],
+			Alts:     nbAlts,
+			TieBreak: []comsoc.Alternative{1, 2, 3, 4, 5},
+		},
+		listCinBallots[nbBallots-3],
+		cout)
 	//Scrutin avec une deadline passée
 	ballotAgents[nbBallots-2] = *restclientagent.NewRestClientBallotAgent("ag_scrut_passed_deadline", url,
 		restagent.RequestNewBallot{
