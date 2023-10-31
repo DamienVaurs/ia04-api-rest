@@ -23,6 +23,10 @@ import (
 * 8 ordres de préférences : [3, 2, 1, 4]
 * 2 ordres de préférences : [4, 3, 2, 1]
 *
+* Résultats attendu :
+* Scrutin majoritaire simple : [4, 1, 3, 2]
+* Borda : [2, 3, 1, 4]
+* Condorcet : 3 vainqueur de Condorcet
 **/
 func InitChap3Diap34(url string, n int, nbBallot, nbAlts int, listCinVotants []chan []string, listCinBallots []chan []string, cout chan string) ([]restclientagent.RestClientVoteAgent, []restclientagent.RestClientBallotAgent) {
 	listAgentsId := make([]string, n)

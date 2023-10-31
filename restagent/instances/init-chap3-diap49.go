@@ -16,7 +16,7 @@ import (
 * 5 ordres de préférences : [1, 2, 3, 4]
 * 4 ordres de préférences : [2, 3, 4, 1]
 * 3 ordres de préférences : [4, 3, 1, 2]
-*
+* Resultat attendu : [1, 2, 4, 3]
 **/
 func InitChap3Diap49(url string, n int, nbBallots int, nbAlts int, listCinVotants []chan []string, listCinBallots []chan []string, cout chan string) ([]restclientagent.RestClientVoteAgent, []restclientagent.RestClientBallotAgent) {
 	listAgentsId := make([]string, n)

@@ -15,7 +15,7 @@ import (
 * Alternatives : 3
 * Profil 1 :[1, 2, 3], [1, 3, 2], [3, 2, 1]
 * Profil 2 :[1, 2, 3], [2, 3, 1], [3, 1, 2]
-*
+* Résultat attendu : 1 vainqueur de Condorcet pour le premier scrutin, pas de vainqueur de Condorcet pour le second
 **/
 func InitChap3Diap12_13(url string, n int, nbBallots int, nbAlts int, listCinVotants []chan []string, listCinBallots []chan []string, cout chan string) ([]restclientagent.RestClientVoteAgent, []restclientagent.RestClientBallotAgent) {
 	listAgentsId := make([]string, n)

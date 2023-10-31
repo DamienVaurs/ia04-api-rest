@@ -4,7 +4,7 @@ import "gitlab.utc.fr/milairhu/ia04-api-rest/restagent/instances"
 
 /**
 * Cette commande lance un serveur et une flotte d'agents votants
-* pour calculer les résultats de 2 scrutins STV, un impiquant l'usage de Tie-Break, l'autre non.
+* pour calculer les résultats de 2 scrutins STV, un impliquant l'usage de Tie-Break, l'autre non.
 **/
 
 func main() {

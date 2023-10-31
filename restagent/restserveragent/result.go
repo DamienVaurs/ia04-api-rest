@@ -215,6 +215,7 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		case restagent.Borda:
 			swfVote = comsoc.BordaSWF
 		case restagent.Copeland:
+			// Remarque : on applique le Tie-break pour Copeland uniquement après calcul de SWF, pas au sein du processus
 			swfVote = comsoc.CopelandSWF
 		case restagent.Majority:
 			swfVote = comsoc.MajoritySWF

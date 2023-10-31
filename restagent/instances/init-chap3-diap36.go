@@ -10,13 +10,14 @@ import (
 )
 
 /**
-* Diapo 36 du chapitre 3
+* Test de Copeland avec utilisation de Tie-Break
 * Méthode : Copeland
 * Alternatives : 4
+* Scrutin:
 * 5 ordres de préférences : [1, 2, 3, 4]
 * 4 ordres de préférences : [2, 3, 4, 1]
 * 3 ordres de préférences : [4, 3, 1, 2]
-*
+* Résultat attendu avec Tie-Break [1, 2, 3, 4]: [2, 3, 1, 4] (2 est égalité avec 3, 1 est égalité avec 4)
 **/
 func InitChap3Diap36(url string, n int, nbBallots int, nbAlts int, listCinVotants []chan []string, listCinBallots []chan []string, cout chan string) ([]restclientagent.RestClientVoteAgent, []restclientagent.RestClientBallotAgent) {
 	listAgentsId := make([]string, n)
