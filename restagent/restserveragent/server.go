@@ -13,7 +13,7 @@ import (
 )
 
 type RestServerAgent struct {
-	sync.Mutex                              //les requêtes doivent se faire l'une après l'autre, car certaines requêtes votent, d'autres demandes les résultats
+	sync.Mutex                              //les requêtes doivent se faire l'une après l'autre, car certaines requêtes votent, d'autres demandent les résultats
 	addr        string                      //adresse du serveur (ip:port)
 	ballotsMap  map[string]comsoc.Profile   //associe l'id d'un ballot à son Profil
 	ballotsList map[string]restagent.Ballot //associe l'id d'un ballot à son objet Ballot

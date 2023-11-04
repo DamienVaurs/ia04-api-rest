@@ -38,13 +38,12 @@ func checkResultRequest(ballotsList map[string]restagent.Ballot, req restagent.R
 		return fmt.Errorf("notfinished")
 	}
 
-	//Vérifie la cohérence des thresholds (déjà vérifiée à la réception de la requête)
+	//Vérifie la cohérence des thresholds (déjà vérifiée à la réception de la requête de vote)
 	//Remarque : on gagne peut-être en sécurité mais on perd en performance
 	if ballotsList[req.BallotId].Rule == restagent.Approval {
 		var nbVotant int
 		for ; nbVotant < len(ballotsList[req.BallotId].HaveVoted) && ballotsList[req.BallotId].HaveVoted[nbVotant] != ""; nbVotant++ {
 		}
-		//fmt.Println("nbVotant : ", nbVotant)
 
 		if len(ballotsList[req.BallotId].Thresholds) != nbVotant {
 			return fmt.Errorf("thresholdnumber")
@@ -73,7 +72,6 @@ func (rsa *RestServerAgent) doCalcResult(w http.ResponseWriter, r *http.Request)
 		fmt.Fprint(w, err.Error())
 		return
 	}
-	fmt.Println("Serveur recoit : ", r.URL, req)
 
 	//Vérifications sur la requête
 	err = checkResultRequest(rsa.ballotsList, req)

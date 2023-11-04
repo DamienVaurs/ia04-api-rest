@@ -28,7 +28,7 @@ func (rca *RestClientBallotAgent) doRequestNewBallot(req restagent.RequestNewBal
 	url := rca.url + endpoints.NewBallot
 	data, err := json.Marshal(req)
 	if err != nil {
-		return res, fmt.Errorf("/new_ballot. error by %s in /new_ballot while marshalling request: %s", rca.id, err.Error())
+		return res, fmt.Errorf("/new_ballot. error by %s in /new_ballot while marshalling request: %s", rca.Id, err.Error())
 	}
 
 	// envoi de la requête
@@ -36,7 +36,7 @@ func (rca *RestClientBallotAgent) doRequestNewBallot(req restagent.RequestNewBal
 
 	// traitement de la réponse
 	if err != nil {
-		return res, fmt.Errorf("/new_ballot. error by %s in /new_ballot while sending request: %s", rca.id, err.Error())
+		return res, fmt.Errorf("/new_ballot. error by %s in /new_ballot while sending request: %s", rca.Id, err.Error())
 	}
 	if resp.StatusCode != http.StatusCreated {
 
@@ -44,7 +44,7 @@ func (rca *RestClientBallotAgent) doRequestNewBallot(req restagent.RequestNewBal
 	}
 	res, err = rca.treatResponseNewBallot(resp)
 	if err != nil {
-		return res, fmt.Errorf("/new_ballot. error by %s in /new_ballot while treating response: %s", rca.id, err.Error())
+		return res, fmt.Errorf("/new_ballot. error by %s in /new_ballot while treating response: %s", rca.Id, err.Error())
 	}
 
 	return
