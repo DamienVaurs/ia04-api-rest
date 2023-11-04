@@ -88,7 +88,6 @@ func (rsa *RestServerAgent) doCreateNewBallot(w http.ResponseWriter, r *http.Req
 		fmt.Fprint(w, err.Error())
 		return
 	}
-	fmt.Println("Serveur recoit : ", r.URL, req)
 
 	err = checkBallot(req)
 

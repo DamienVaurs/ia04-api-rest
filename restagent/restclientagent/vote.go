@@ -19,7 +19,7 @@ func (rca *RestClientVoteAgent) doRequestVote(req restagent.RequestVote) (err er
 	url := rca.url + endpoints.Vote
 	data, err := json.Marshal(req)
 	if err != nil {
-		return fmt.Errorf("/vote. error by %s in /vote while marshalling request: %s", rca.id, err.Error())
+		return fmt.Errorf("/vote. error by %s in /vote while marshalling request: %s", rca.Id, err.Error())
 	}
 
 	// envoi de la requête
@@ -27,7 +27,7 @@ func (rca *RestClientVoteAgent) doRequestVote(req restagent.RequestVote) (err er
 
 	// traitement de la réponse
 	if err != nil {
-		return fmt.Errorf("/vote. error by %s in /vote while sending request: %s", rca.id, err.Error())
+		return fmt.Errorf("/vote. error by %s in /vote while sending request: %s", rca.Id, err.Error())
 	}
 	if resp.StatusCode != http.StatusOK {
 
